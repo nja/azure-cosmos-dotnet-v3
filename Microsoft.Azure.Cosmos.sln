@@ -13,12 +13,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Azure.Cosmos.Emul
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Azure.Cosmos.Performance.Tests", "Microsoft.Azure.Cosmos\tests\Microsoft.Azure.Cosmos.Performance.Tests\Microsoft.Azure.Cosmos.Performance.Tests.csproj", "{49FE4994-30ED-4788-B709-6DE1939F5AFA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Azure.Cosmos.ChangeFeedProcessor", "Microsoft.Azure.Cosmos.ChangeFeedProcessor\src\Microsoft.Azure.Cosmos.ChangeFeedProcessor.csproj", "{55B5FEFB-AC93-44A4-8294-A6BE2556BFE8}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Azure.Cosmos.ChangeFeedProcessor.IntegrationTests", "Microsoft.Azure.Cosmos.ChangeFeedProcessor\tests\Microsoft.Azure.Cosmos.ChangeFeedProcessor.IntegrationTests\Microsoft.Azure.Cosmos.ChangeFeedProcessor.IntegrationTests.csproj", "{F87E267B-FC46-4BD2-BEEB-B2999F2414D5}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Azure.Cosmos.ChangeFeedProcessor.UnitTests", "Microsoft.Azure.Cosmos.ChangeFeedProcessor\tests\Microsoft.Azure.Cosmos.ChangeFeedProcessor.UnitTests\Microsoft.Azure.Cosmos.ChangeFeedProcessor.UnitTests.csproj", "{23EF25E1-8AEC-4826-BE77-AD00E93DE0D1}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Cover|Any CPU = Cover|Any CPU
@@ -89,42 +83,6 @@ Global
 		{49FE4994-30ED-4788-B709-6DE1939F5AFA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{49FE4994-30ED-4788-B709-6DE1939F5AFA}.Release|x64.ActiveCfg = Release|Any CPU
 		{49FE4994-30ED-4788-B709-6DE1939F5AFA}.Release|x64.Build.0 = Release|Any CPU
-		{55B5FEFB-AC93-44A4-8294-A6BE2556BFE8}.Cover|Any CPU.ActiveCfg = Release|Any CPU
-		{55B5FEFB-AC93-44A4-8294-A6BE2556BFE8}.Cover|Any CPU.Build.0 = Release|Any CPU
-		{55B5FEFB-AC93-44A4-8294-A6BE2556BFE8}.Cover|x64.ActiveCfg = Release|Any CPU
-		{55B5FEFB-AC93-44A4-8294-A6BE2556BFE8}.Cover|x64.Build.0 = Release|Any CPU
-		{55B5FEFB-AC93-44A4-8294-A6BE2556BFE8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{55B5FEFB-AC93-44A4-8294-A6BE2556BFE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{55B5FEFB-AC93-44A4-8294-A6BE2556BFE8}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{55B5FEFB-AC93-44A4-8294-A6BE2556BFE8}.Debug|x64.Build.0 = Debug|Any CPU
-		{55B5FEFB-AC93-44A4-8294-A6BE2556BFE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{55B5FEFB-AC93-44A4-8294-A6BE2556BFE8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{55B5FEFB-AC93-44A4-8294-A6BE2556BFE8}.Release|x64.ActiveCfg = Release|Any CPU
-		{55B5FEFB-AC93-44A4-8294-A6BE2556BFE8}.Release|x64.Build.0 = Release|Any CPU
-		{F87E267B-FC46-4BD2-BEEB-B2999F2414D5}.Cover|Any CPU.ActiveCfg = Debug|Any CPU
-		{F87E267B-FC46-4BD2-BEEB-B2999F2414D5}.Cover|Any CPU.Build.0 = Debug|Any CPU
-		{F87E267B-FC46-4BD2-BEEB-B2999F2414D5}.Cover|x64.ActiveCfg = Debug|Any CPU
-		{F87E267B-FC46-4BD2-BEEB-B2999F2414D5}.Cover|x64.Build.0 = Debug|Any CPU
-		{F87E267B-FC46-4BD2-BEEB-B2999F2414D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F87E267B-FC46-4BD2-BEEB-B2999F2414D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F87E267B-FC46-4BD2-BEEB-B2999F2414D5}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{F87E267B-FC46-4BD2-BEEB-B2999F2414D5}.Debug|x64.Build.0 = Debug|Any CPU
-		{F87E267B-FC46-4BD2-BEEB-B2999F2414D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F87E267B-FC46-4BD2-BEEB-B2999F2414D5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F87E267B-FC46-4BD2-BEEB-B2999F2414D5}.Release|x64.ActiveCfg = Release|Any CPU
-		{F87E267B-FC46-4BD2-BEEB-B2999F2414D5}.Release|x64.Build.0 = Release|Any CPU
-		{23EF25E1-8AEC-4826-BE77-AD00E93DE0D1}.Cover|Any CPU.ActiveCfg = Debug|Any CPU
-		{23EF25E1-8AEC-4826-BE77-AD00E93DE0D1}.Cover|Any CPU.Build.0 = Debug|Any CPU
-		{23EF25E1-8AEC-4826-BE77-AD00E93DE0D1}.Cover|x64.ActiveCfg = Debug|Any CPU
-		{23EF25E1-8AEC-4826-BE77-AD00E93DE0D1}.Cover|x64.Build.0 = Debug|Any CPU
-		{23EF25E1-8AEC-4826-BE77-AD00E93DE0D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{23EF25E1-8AEC-4826-BE77-AD00E93DE0D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{23EF25E1-8AEC-4826-BE77-AD00E93DE0D1}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{23EF25E1-8AEC-4826-BE77-AD00E93DE0D1}.Debug|x64.Build.0 = Debug|Any CPU
-		{23EF25E1-8AEC-4826-BE77-AD00E93DE0D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{23EF25E1-8AEC-4826-BE77-AD00E93DE0D1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{23EF25E1-8AEC-4826-BE77-AD00E93DE0D1}.Release|x64.ActiveCfg = Release|Any CPU
-		{23EF25E1-8AEC-4826-BE77-AD00E93DE0D1}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
