@@ -2,14 +2,14 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //----------------------------------------------------------------
 
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.PartitionManagement
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
 {
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.Exceptions;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.FeedProcessing;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.Utils;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Exceptions;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Utils;
 
     internal class PartitionSupervisor : IPartitionSupervisor
     {

@@ -2,35 +2,31 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //  ----------------------------------------------------------------
 
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.FeedProcessing
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
 {
     using System;
     using Microsoft.Azure.Cosmos;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.LeaseManagement;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.PartitionManagement;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
 
     internal class PartitionProcessorFactory : IPartitionProcessorFactory
     {
-        private readonly DocumentClient documentClient;
+        private readonly CosmosContainer container;
         private readonly ChangeFeedProcessorOptions changeFeedProcessorOptions;
         private readonly ILeaseCheckpointer leaseCheckpointer;
-        private readonly string collectionSelfLink;
 
         public PartitionProcessorFactory(
-            DocumentClient documentClient,
+            CosmosContainer container,
             ChangeFeedProcessorOptions changeFeedProcessorOptions,
-            ILeaseCheckpointer leaseCheckpointer,
-            string collectionSelfLink)
+            ILeaseCheckpointer leaseCheckpointer)
         {
-            if (documentClient == null) throw new ArgumentNullException(nameof(documentClient));
+            if (container == null) throw new ArgumentNullException(nameof(container));
             if (changeFeedProcessorOptions == null) throw new ArgumentNullException(nameof(changeFeedProcessorOptions));
             if (leaseCheckpointer == null) throw new ArgumentNullException(nameof(leaseCheckpointer));
-            if (collectionSelfLink == null) throw new ArgumentNullException(nameof(collectionSelfLink));
 
-            this.documentClient = documentClient;
+            this.container = container;
             this.changeFeedProcessorOptions = changeFeedProcessorOptions;
             this.leaseCheckpointer = leaseCheckpointer;
-            this.collectionSelfLink = collectionSelfLink;
         }
 
         public IPartitionProcessor Create(ILease lease, IChangeFeedObserver observer)
@@ -40,7 +36,6 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor.FeedProcessing
 
             var settings = new ProcessorSettings
             {
-                CollectionSelfLink = this.collectionSelfLink,
                 StartContinuation = !string.IsNullOrEmpty(lease.ContinuationToken) ?
                     lease.ContinuationToken :
                     this.changeFeedProcessorOptions.StartContinuation,
@@ -53,7 +48,7 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor.FeedProcessing
             };
 
             var checkpointer = new PartitionCheckpointer(this.leaseCheckpointer, lease);
-            return new PartitionProcessor(observer, this.documentClient, settings, checkpointer);
+            return new PartitionProcessor(observer, this.container, settings, checkpointer);
         }
     }
 }

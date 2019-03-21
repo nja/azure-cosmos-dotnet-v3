@@ -2,11 +2,11 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //----------------------------------------------------------------
 
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.Exceptions
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Exceptions
 {
     using System;
     using System.Runtime.Serialization;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.PartitionManagement;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
 
     /// <summary>
     /// Exception occurred when lease is lost, that would typically happen when it is taken by another host. Other cases: communication failure, number of retries reached, lease not found.
@@ -50,6 +50,18 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor.Exceptions
         public LeaseLostException(string message, Exception innerException)
             : base(message, innerException)
         {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LeaseLostException" /> class using the specified lease, and a flag indicating whether lease is gone.
+        /// </summary>
+        /// <param name="lease">Instance of a lost lease.</param>
+        /// <param name="isGone">Whether lease doesn't exist.</param>
+        public LeaseLostException(ILease lease, bool isGone)
+            : base(DefaultMessage)
+        {
+            this.Lease = lease;
+            this.IsGone = isGone;
         }
 
         /// <summary>

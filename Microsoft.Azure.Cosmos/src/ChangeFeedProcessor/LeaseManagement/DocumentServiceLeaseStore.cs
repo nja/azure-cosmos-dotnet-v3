@@ -2,66 +2,58 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //----------------------------------------------------------------
 
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.LeaseManagement
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
 {
     using System;
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos;
-    using Microsoft.Azure.Cosmos.Internal;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.Utils;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Utils;
 
     internal class DocumentServiceLeaseStore : ILeaseStore
     {
-        private readonly DocumentClient client;
-        private readonly DocumentCollectionInfo leaseStoreCollectionInfo;
+        private readonly CosmosContainer container;
         private readonly string containerNamePrefix;
-        private readonly string leaseCollectionLink;
         private readonly IRequestOptionsFactory requestOptionsFactory;
         private string lockETag;
 
         public DocumentServiceLeaseStore(
-            DocumentClient client,
-            DocumentCollectionInfo leaseCollectionInfo,
+            CosmosContainer container,
             string containerNamePrefix,
-            string leaseCollectionLink,
             IRequestOptionsFactory requestOptionsFactory)
         {
-            this.client = client;
-            this.leaseStoreCollectionInfo = leaseCollectionInfo;
+            this.container = container;
             this.containerNamePrefix = containerNamePrefix;
-            this.leaseCollectionLink = leaseCollectionLink;
             this.requestOptionsFactory = requestOptionsFactory;
         }
 
         public async Task<bool> IsInitializedAsync()
         {
             string markerDocId = this.GetStoreMarkerName();
-            Uri documentUri = UriFactory.CreateDocumentUri(this.leaseStoreCollectionInfo.DatabaseName, this.leaseStoreCollectionInfo.CollectionName, markerDocId);
-            var requestOptions = this.requestOptionsFactory.CreateRequestOptions(
-                DocumentServiceLease.FromDocument(new Document { Id = markerDocId }));
 
-            Document document = await this.client.TryGetDocumentAsync(documentUri, requestOptions).ConfigureAwait(false);
-            return document != null;
+            return await this.container.ItemExistsAsync(this.requestOptionsFactory.GetPartitionKey(markerDocId), markerDocId).ConfigureAwait(false);
         }
 
         public async Task MarkInitializedAsync()
         {
             string markerDocId = this.GetStoreMarkerName();
-            var containerDocument = new Document { Id = markerDocId };
-            await this.client.CreateDocumentAsync(this.leaseCollectionLink, containerDocument).ConfigureAwait(false);
+            var containerDocument = new { id = markerDocId };
+            await this.container.Items.CreateItemAsync<dynamic>(
+                this.requestOptionsFactory.GetPartitionKey(markerDocId),
+                containerDocument
+                ).ConfigureAwait(false);
         }
 
         public async Task<bool> AcquireInitializationLockAsync(TimeSpan lockTime)
         {
             string lockId = this.GetStoreLockName();
-            var containerDocument = new Document { Id = lockId, TimeToLive = (int)lockTime.TotalSeconds };
-            var document = await this.client.TryCreateDocumentAsync(
-                this.leaseCollectionLink,
+            var containerDocument = new { id = lockId, ttl = (int)lockTime.TotalSeconds };
+            var document = await this.container.TryCreateItemAsync<dynamic>(
+                this.requestOptionsFactory.GetPartitionKey(lockId),
                 containerDocument).ConfigureAwait(false);
 
             if (document != null)
             {
-                this.lockETag = document.ETag;
+                this.lockETag = document.etag;
                 return true;
             }
 
@@ -71,15 +63,14 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor.LeaseManagement
         public async Task<bool> ReleaseInitializationLockAsync()
         {
             string lockId = this.GetStoreLockName();
-            Uri documentUri = UriFactory.CreateDocumentUri(this.leaseStoreCollectionInfo.DatabaseName, this.leaseStoreCollectionInfo.CollectionName, lockId);
+            var requestOptions = new CosmosItemRequestOptions()
+            {
+                AccessCondition = new AccessCondition { Type = AccessConditionType.IfMatch, Condition = this.lockETag }
+            };
 
-            var requestOptions = this.requestOptionsFactory.CreateRequestOptions(
-                DocumentServiceLease.FromDocument(new Document { Id = lockId }));
-            requestOptions = requestOptions ?? new RequestOptions();
-            requestOptions.AccessCondition = new AccessCondition { Type = AccessConditionType.IfMatch, Condition = this.lockETag };
-
-            var document = await this.client.TryDeleteDocumentAsync(
-                documentUri,
+            var document = await this.container.TryDeleteItemAsync<dynamic>(
+                this.requestOptionsFactory.GetPartitionKey(lockId),
+                lockId,
                 requestOptions).ConfigureAwait(false);
 
             if (document != null)

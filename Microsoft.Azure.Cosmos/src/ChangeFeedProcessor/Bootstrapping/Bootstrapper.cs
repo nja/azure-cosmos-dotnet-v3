@@ -2,13 +2,13 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //----------------------------------------------------------------
 
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.Bootstrapping
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Bootstrapping
 {
     using System;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.LeaseManagement;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.Logging;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.PartitionManagement;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Logging;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
 
     internal class Bootstrapper : IBootstrapper
     {

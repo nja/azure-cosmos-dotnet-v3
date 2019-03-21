@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //----------------------------------------------------------------
 
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.Bootstrapping
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Bootstrapping
 {
     using System;
     using System.Collections.Concurrent;
@@ -10,33 +10,30 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor.Bootstrapping
     using System.Globalization;
     using System.Linq;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.LeaseManagement;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.Logging;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.PartitionManagement;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.Utils;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Logging;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Utils;
     using Microsoft.Azure.Cosmos;
     using Microsoft.Azure.Cosmos.Internal;
 
     internal class PartitionSynchronizer : IPartitionSynchronizer
     {
         private static readonly ILog Logger = LogProvider.GetCurrentClassLogger();
-        private readonly DocumentClient documentClient;
-        private readonly string collectionSelfLink;
+        private readonly CosmosContainer container;
         private readonly ILeaseContainer leaseContainer;
         private readonly ILeaseManager leaseManager;
         private readonly int degreeOfParallelism;
         private readonly int maxBatchSize;
 
         public PartitionSynchronizer(
-            DocumentClient documentClient,
-            string collectionSelfLink,
+            CosmosContainer container,
             ILeaseContainer leaseContainer,
             ILeaseManager leaseManager,
             int degreeOfParallelism,
             int maxBatchSize)
         {
-            this.documentClient = documentClient;
-            this.collectionSelfLink = collectionSelfLink;
+            this.container = container;
             this.leaseContainer = leaseContainer;
             this.leaseManager = leaseManager;
             this.degreeOfParallelism = degreeOfParallelism;
@@ -47,7 +44,7 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor.Bootstrapping
         {
             List<PartitionKeyRange> ranges = await this.EnumPartitionKeyRangesAsync().ConfigureAwait(false);
             var partitionIds = new HashSet<string>(ranges.Select(range => range.Id));
-            Logger.InfoFormat("Source collection: '{0}', {1} partition(s)", this.collectionSelfLink, partitionIds.Count);
+            Logger.InfoFormat("Source collection: '{0}', {1} partition(s)", this.container.LinkUri.ToString(), partitionIds.Count);
             await this.CreateLeasesAsync(partitionIds).ConfigureAwait(false);
         }
 
@@ -92,7 +89,8 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor.Bootstrapping
 
         private async Task<List<PartitionKeyRange>> EnumPartitionKeyRangesAsync()
         {
-            string partitionKeyRangesPath = string.Format(CultureInfo.InvariantCulture, "{0}/pkranges", this.collectionSelfLink);
+            string containerUri = this.container.LinkUri.ToString();
+            string partitionKeyRangesPath = string.Format(CultureInfo.InvariantCulture, "{0}/pkranges", containerUri);
 
             IFeedResponse<PartitionKeyRange> response = null;
             var partitionKeyRanges = new List<PartitionKeyRange>();
@@ -103,7 +101,7 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor.Bootstrapping
                     MaxItemCount = this.maxBatchSize,
                     RequestContinuation = response?.ResponseContinuation,
                 };
-                response = await this.documentClient.ReadPartitionKeyRangeFeedAsync(this.collectionSelfLink, feedOptions).ConfigureAwait(false);
+                response = await this.container.Client.DocumentClient.ReadPartitionKeyRangeFeedAsync(containerUri, feedOptions).ConfigureAwait(false);
                 IEnumerator<PartitionKeyRange> enumerator = response.GetEnumerator();
                 while (enumerator.MoveNext())
                 {

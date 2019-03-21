@@ -2,9 +2,9 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //----------------------------------------------------------------
 
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.LeaseManagement
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
 {
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.PartitionManagement;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
     using Microsoft.Azure.Cosmos;
 
     /// <summary>
@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor.LeaseManagement
     /// </summary>
     internal class PartitionedByIdCollectionRequestOptionsFactory : IRequestOptionsFactory
     {
-        public RequestOptions CreateRequestOptions(ILease lease) => new RequestOptions { PartitionKey = new PartitionKey(lease.Id) };
+        public string GetPartitionKey(string itemId) => itemId;
 
         public FeedOptions CreateFeedOptions() => new FeedOptions { EnableCrossPartitionQuery = true };
     }

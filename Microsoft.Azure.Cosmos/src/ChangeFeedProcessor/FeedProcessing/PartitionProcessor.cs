@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //----------------------------------------------------------------
 
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.FeedProcessing
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
 {
     using System;
     using System.Collections.Generic;
@@ -12,9 +12,9 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor.FeedProcessing
     using Microsoft.Azure.Cosmos;
     using Microsoft.Azure.Cosmos.Internal;
     using Microsoft.Azure.Cosmos.Linq;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.DocDBErrors;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.Exceptions;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.Logging;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.DocDBErrors;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Exceptions;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Logging;
 
     internal class PartitionProcessor : IPartitionProcessor
     {
@@ -26,7 +26,7 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor.FeedProcessing
         private readonly IChangeFeedObserver observer;
         private readonly ChangeFeedOptions options;
 
-        public PartitionProcessor(IChangeFeedObserver observer, DocumentClient documentClient, ProcessorSettings settings, IPartitionCheckpointer checkpointer)
+        public PartitionProcessor(IChangeFeedObserver observer, CosmosContainer container, ProcessorSettings settings, IPartitionCheckpointer checkpointer)
         {
             this.observer = observer;
             this.settings = settings;
@@ -41,7 +41,7 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor.FeedProcessing
                 StartTime = settings.StartTime,
             };
 
-            this.query = documentClient.CreateDocumentChangeFeedQuery(settings.CollectionSelfLink, this.options);
+            this.query = container.Client.DocumentClient.CreateDocumentChangeFeedQuery(container.LinkUri.ToString(), this.options);
         }
 
         public async Task RunAsync(CancellationToken cancellationToken)

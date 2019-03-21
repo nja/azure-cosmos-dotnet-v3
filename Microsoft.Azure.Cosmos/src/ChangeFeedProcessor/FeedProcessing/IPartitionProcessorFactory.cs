@@ -2,9 +2,9 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //  ----------------------------------------------------------------
 
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.FeedProcessing
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
 {
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.PartitionManagement;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
 
     /// <summary>
     /// Factory class used to create instance(s) of <see cref="IPartitionProcessor"/>.

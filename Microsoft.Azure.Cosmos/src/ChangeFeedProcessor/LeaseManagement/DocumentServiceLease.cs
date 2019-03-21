@@ -2,13 +2,13 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //----------------------------------------------------------------
 
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.LeaseManagement
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
 {
     using System;
     using System.Collections.Generic;
     using System.Globalization;
     using Microsoft.Azure.Cosmos.Internal;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.PartitionManagement;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
     using Newtonsoft.Json;
 
     [Serializable]

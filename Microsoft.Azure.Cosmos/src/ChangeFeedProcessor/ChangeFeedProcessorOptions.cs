@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //----------------------------------------------------------------
 
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
 {
     using System;
     using Microsoft.Azure.Cosmos;

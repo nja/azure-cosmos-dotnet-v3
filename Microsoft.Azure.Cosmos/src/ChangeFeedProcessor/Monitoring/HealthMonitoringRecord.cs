@@ -2,10 +2,10 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //----------------------------------------------------------------
 
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.Monitoring
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Monitoring
 {
     using System;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.PartitionManagement;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
 
     /// <summary>
     /// A record used in the health monitoring.

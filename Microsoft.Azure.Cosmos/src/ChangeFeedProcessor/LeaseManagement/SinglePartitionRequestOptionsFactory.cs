@@ -2,9 +2,9 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //----------------------------------------------------------------
 
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.LeaseManagement
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
 {
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.PartitionManagement;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
     using Microsoft.Azure.Cosmos;
 
     /// <summary>
@@ -14,6 +14,6 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor.LeaseManagement
     {
         public FeedOptions CreateFeedOptions() => null;
 
-        public RequestOptions CreateRequestOptions(ILease lease) => null;
+        public string GetPartitionKey(string itemId) => null;
     }
 }

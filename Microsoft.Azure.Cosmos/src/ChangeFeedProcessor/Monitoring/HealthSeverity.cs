@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //----------------------------------------------------------------
 
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.Monitoring
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Monitoring
 {
     /// <summary>
     /// The health severity level

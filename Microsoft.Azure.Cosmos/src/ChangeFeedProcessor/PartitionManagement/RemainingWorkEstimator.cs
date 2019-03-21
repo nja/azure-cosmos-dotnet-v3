@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //----------------------------------------------------------------
 
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.PartitionManagement
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
 {
     using System;
     using System.Collections.Concurrent;
@@ -13,8 +13,8 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor.PartitionManagement
     using Microsoft.Azure.Cosmos;
     using Microsoft.Azure.Cosmos.Internal;
     using Microsoft.Azure.Cosmos.Linq;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.LeaseManagement;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.Logging;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Logging;
 
     internal class RemainingWorkEstimator : IRemainingWorkEstimator
     {

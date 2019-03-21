@@ -2,15 +2,15 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //----------------------------------------------------------------
 
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.Logging
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Logging
 {
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Globalization;
     using System.Threading;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.Logging;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.Logging.LogProviders;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Logging;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Logging.LogProviders;
 
     /// <summary>
     /// Implements a trace log provider for .Net tracing.
@@ -18,7 +18,7 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor.Logging
     /// <example>
     /// <code language="C#">
     /// <![CDATA[
-    /// using Microsoft.Azure.Documents.ChangeFeedProcessor.Logging;
+    /// using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Logging;
     ///
     /// var hostName = "SampleHost";
     /// var tracelogProvider = new TraceLogProvider();

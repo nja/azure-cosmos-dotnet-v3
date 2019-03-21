@@ -44,17 +44,17 @@
 // If you copied this file manually, you need to change all "YourRootNameSpace" so not to clash with other libraries
 // that use LibLog
 #if LIBLOG_PROVIDERS_ONLY
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.LibLog
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LibLog
 #else
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.Logging
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Logging
 #endif
 {
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
 #if LIBLOG_PROVIDERS_ONLY
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.LibLog.LogProviders;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.LibLog.LogProviders;
 #else
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.Logging.LogProviders;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Logging.LogProviders;
 #endif
     using System;
 #if !LIBLOG_PROVIDERS_ONLY
@@ -704,9 +704,9 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor.Logging
 }
 
 #if LIBLOG_PROVIDERS_ONLY
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.LibLog.LogProviders
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LibLog.LogProviders
 #else
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.Logging.LogProviders
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Logging.LogProviders
 #endif
 {
     using System;

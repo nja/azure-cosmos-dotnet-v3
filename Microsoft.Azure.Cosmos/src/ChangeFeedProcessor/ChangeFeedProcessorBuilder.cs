@@ -2,20 +2,22 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //----------------------------------------------------------------
 
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
 {
     using System;
+    using System.Collections.Generic;
     using System.Globalization;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.Bootstrapping;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.FeedProcessing;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.LeaseManagement;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.Logging;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.Monitoring;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.PartitionManagement;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.Utils;
+    using Microsoft.Azure.Cosmos.Internal;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Bootstrapping;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Logging;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Monitoring;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Utils;
 
     /// <summary>
     /// Provides a flexible way to to create an instance of <see cref="IChangeFeedProcessor"/> with custom set of parameters.
@@ -31,7 +33,7 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor
     ///     using System.Threading;
     ///     using System.Threading.Tasks;
     ///     using Microsoft.Azure.Documents;
-    ///     using Microsoft.Azure.Documents.ChangeFeedProcessor.FeedProcessing;
+    ///     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing;
     ///
     ///     class SampleObserver : IChangeFeedObserver
     ///     {
@@ -58,8 +60,8 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor
     /// {
     ///     using System;
     ///     using System.Threading.Tasks;
-    ///     using Microsoft.Azure.Documents.ChangeFeedProcessor;
-    ///     using Microsoft.Azure.Documents.ChangeFeedProcessor.Logging;
+    ///     using Microsoft.Azure.Cosmos.ChangeFeedProcessor;
+    ///     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Logging;
     ///
     ///     class ChangeFeedProcessorSample
     ///     {
@@ -112,18 +114,15 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor
         private static readonly long DefaultUnhealthinessDuration = TimeSpan.FromMinutes(15).Ticks;
         private readonly TimeSpan sleepTime = TimeSpan.FromSeconds(15);
         private readonly TimeSpan lockTime = TimeSpan.FromSeconds(30);
-        private DocumentCollectionInfo feedCollectionLocation = null;
         private ChangeFeedProcessorOptions changeFeedProcessorOptions;
-        private DocumentClient feedCosmosClient;
         private IChangeFeedObserverFactory observerFactory = null;
         private string databaseResourceId;
         private string collectionResourceId;
-        private DocumentCollectionInfo leaseCollectionLocation;
-        private CosmosClient leaseCosmosClient = null;
         private IParitionLoadBalancingStrategy loadBalancingStrategy;
         private IPartitionProcessorFactory partitionProcessorFactory = null;
         private IHealthMonitor healthMonitor;
-        private CosmosContainerCore monitoredContainer;
+        private CosmosContainer monitoredContainer;
+        private CosmosContainer leaseContainer;
 
         internal string HostName
         {
@@ -142,9 +141,15 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor
             private set;
         }
 
-        internal ChangeFeedProcessorBuilder(CosmosContainerCore cosmosContainer)
+        internal ChangeFeedProcessorBuilder(CosmosContainer cosmosContainer)
         {
             this.monitoredContainer = cosmosContainer;
+        }
+
+        internal ChangeFeedProcessorBuilder(CosmosContainer cosmosContainer, Func<IReadOnlyList<dynamic>, CancellationToken, Task> onChanges)
+            : this(cosmosContainer)
+        {
+            this.observerFactory = new ChangeFeedObserverFactory<ChangeFeedObserverBase>(() => new ChangeFeedObserverBase(onChanges));
         }
 
         /// <summary>
@@ -255,14 +260,14 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor
         //}
 
         /// <summary>
-        /// Sets the <see cref="DocumentCollectionInfo"/> of the collection to use for leases.
+        /// Sets the Cosmos Con
         /// </summary>
-        /// <param name="leaseCollectionLocation">The instance of a <see cref="DocumentCollectionInfo"/> to use.</param>
-        /// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
-        public ChangeFeedProcessorBuilder WithLeaseCollection(DocumentCollectionInfo leaseCollectionLocation)
+        /// <param name="leaseContainer"></param>
+        /// <returns></returns>
+        public ChangeFeedProcessorBuilder WithLeaseContainer(CosmosContainer leaseContainer)
         {
-            if (leaseCollectionLocation == null) throw new ArgumentNullException(nameof(leaseCollectionLocation));
-            this.leaseCollectionLocation = leaseCollectionLocation.Canonicalize();
+            if (leaseContainer == null) throw new ArgumentNullException(nameof(leaseContainer));
+            this.leaseContainer = leaseContainer;
             return this;
         }
 
@@ -349,14 +354,14 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor
                 throw new InvalidOperationException("Host name was not specified");
             }
 
-            if (this.feedCollectionLocation == null)
+            if (this.monitoredContainer == null)
             {
-                throw new InvalidOperationException(nameof(this.feedCollectionLocation) + " was not specified");
+                throw new InvalidOperationException(nameof(this.monitoredContainer) + " was not specified");
             }
 
-            if (this.leaseCollectionLocation == null && this.LeaseStoreManager == null)
+            if (this.leaseContainer == null && this.LeaseStoreManager == null)
             {
-                throw new InvalidOperationException($"Either {nameof(this.leaseCollectionLocation)} or {nameof(this.LeaseStoreManager)} must be specified");
+                throw new InvalidOperationException($"Either {nameof(this.leaseContainer)} or {nameof(this.LeaseStoreManager)} must be specified");
             }
 
             if (this.observerFactory == null)
@@ -366,7 +371,7 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor
 
             this.InitializeCollectionPropertiesForBuild();
 
-            ILeaseStoreManager leaseStoreManager = await this.GetLeaseStoreManagerAsync(this.leaseCollectionLocation, true).ConfigureAwait(false);
+            ILeaseStoreManager leaseStoreManager = await this.GetLeaseStoreManagerAsync(this.leaseContainer, true).ConfigureAwait(false);
             IPartitionManager partitionManager = this.BuildPartitionManager(leaseStoreManager);
             return new ChangeFeedProcessor(partitionManager);
         }
@@ -416,11 +421,9 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor
 
         private IPartitionManager BuildPartitionManager(ILeaseStoreManager leaseStoreManager)
         {
-            string feedCollectionSelfLink = this.feedCollectionLocation.GetCollectionSelfLink();
             var factory = new CheckpointerObserverFactory(this.observerFactory, this.changeFeedProcessorOptions.CheckpointFrequency);
             var synchronizer = new PartitionSynchronizer(
-                this.feedCosmosClient,
-                feedCollectionSelfLink,
+                this.monitoredContainer,
                 leaseStoreManager,
                 leaseStoreManager,
                 this.changeFeedProcessorOptions.DegreeOfParallelism,
@@ -429,7 +432,7 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor
             var partitionSuperviserFactory = new PartitionSupervisorFactory(
                 factory,
                 leaseStoreManager,
-                this.partitionProcessorFactory ?? new PartitionProcessorFactory(this.monitoredContainer.DocumentClient, this.changeFeedProcessorOptions, leaseStoreManager, feedCollectionSelfLink),
+                this.partitionProcessorFactory ?? new PartitionProcessorFactory(this.monitoredContainer, this.changeFeedProcessorOptions, leaseStoreManager),
                 this.changeFeedProcessorOptions);
 
             if (this.loadBalancingStrategy == null)
@@ -458,20 +461,20 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor
         }
 
         private async Task<ILeaseStoreManager> GetLeaseStoreManagerAsync(
-            DocumentCollectionInfo collectionInfo,
+            CosmosContainer leaseContainer,
             bool isPartitionKeyByIdRequiredIfPartitioned)
         {
             if (this.LeaseStoreManager == null)
             {
-                var leaseDocumentClient = this.leaseCosmosClient.DocumentClient ?? this.leaseCollectionLocation.CreateDocumentClient();
-                var collection = await leaseDocumentClient.GetDocumentCollectionAsync(collectionInfo).ConfigureAwait(false);
+                var cosmosContainerResponse = await this.leaseContainer.ReadAsync().ConfigureAwait(false);
+                var containerSettings = cosmosContainerResponse.Resource;
 
                 bool isPartitioned =
-                    collection.PartitionKey != null &&
-                    collection.PartitionKey.Paths != null &&
-                    collection.PartitionKey.Paths.Count > 0;
+                    containerSettings.PartitionKey != null &&
+                    containerSettings.PartitionKey.Paths != null &&
+                    containerSettings.PartitionKey.Paths.Count > 0;
                 if (isPartitioned && isPartitionKeyByIdRequiredIfPartitioned &&
-                    (collection.PartitionKey.Paths.Count != 1 || collection.PartitionKey.Paths[0] != "/id"))
+                    (containerSettings.PartitionKey.Paths.Count != 1 || containerSettings.PartitionKey.Paths[0] != "/id"))
                 {
                     throw new ArgumentException("The lease collection, if partitioned, must have partition key equal to id.");
                 }
@@ -483,12 +486,9 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor
                 string leasePrefix = this.GetLeasePrefix();
                 var leaseStoreManagerBuilder = new DocumentServiceLeaseStoreManagerBuilder()
                     .WithLeasePrefix(leasePrefix)
-                    .WithLeaseCollection(this.leaseCollectionLocation)
-                    .WithLeaseCollectionLink(collection.SelfLink)
+                    .WithLeaseContainer(this.leaseContainer)
                     .WithRequestOptionsFactory(requestOptionsFactory)
                     .WithHostName(this.HostName);
-
-                leaseStoreManagerBuilder = leaseStoreManagerBuilder.WithLeaseDocumentClient(leaseDocumentClient);
 
                 this.LeaseStoreManager = await leaseStoreManagerBuilder.BuildAsync().ConfigureAwait(false);
             }
@@ -503,14 +503,13 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor
                 CultureInfo.InvariantCulture,
                 "{0}{1}_{2}_{3}",
                 optionsPrefix,
-                this.feedCollectionLocation.Uri.Host,
+                this.monitoredContainer.Client.Configuration.AccountEndPoint.Host,
                 this.databaseResourceId,
                 this.collectionResourceId);
         }
 
         private void InitializeCollectionPropertiesForBuild()
         {
-            this.feedCosmosClient = this.feedCosmosClient ?? this.feedCollectionLocation.CreateDocumentClient();
             this.changeFeedProcessorOptions = this.changeFeedProcessorOptions ?? new ChangeFeedProcessorOptions();
             var containerLinkSegments = this.monitoredContainer.LinkUri.OriginalString.Split('/');
             this.databaseResourceId = containerLinkSegments[2];

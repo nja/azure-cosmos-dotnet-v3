@@ -2,10 +2,10 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //----------------------------------------------------------------
 
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.PartitionManagement
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
 {
     using System.Threading.Tasks;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.Bootstrapping;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Bootstrapping;
 
     internal class PartitionManager : IPartitionManager
     {

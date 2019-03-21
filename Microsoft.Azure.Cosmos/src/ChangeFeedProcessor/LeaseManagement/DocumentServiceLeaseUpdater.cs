@@ -2,32 +2,31 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //----------------------------------------------------------------
 
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.LeaseManagement
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
 {
     using System;
     using System.Net;
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos;
     using Microsoft.Azure.Cosmos.Internal;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.Exceptions;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.Logging;
-    using Microsoft.Azure.Documents.ChangeFeedProcessor.PartitionManagement;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Exceptions;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Logging;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
     
 
     internal class DocumentServiceLeaseUpdater : IDocumentServiceLeaseUpdater
     {
         private const int RetryCountOnConflict = 5;
         private static readonly ILog Logger = LogProvider.GetCurrentClassLogger();
-        private readonly DocumentClient client;
+        private readonly CosmosContainer container;
 
-        public DocumentServiceLeaseUpdater(DocumentClient client)
+        public DocumentServiceLeaseUpdater(CosmosContainer container)
         {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-            this.client = client;
+            if (container == null) throw new ArgumentNullException(nameof(container));
+            this.container = container;
         }
 
-        // Note: requestOptions are only used for read and not for update.
-        public async Task<ILease> UpdateLeaseAsync(ILease cachedLease, Uri documentUri, RequestOptions requestOptions, Func<ILease, ILease> updateLease)
+        public async Task<ILease> UpdateLeaseAsync(ILease cachedLease, string itemId, object partitionKey, Func<ILease, ILease> updateLease)
         {
             ILease lease = cachedLease;
             for (int retryCount = RetryCountOnConflict; retryCount >= 0; retryCount--)
@@ -39,19 +38,15 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor.LeaseManagement
                 }
 
                 lease.Timestamp = DateTime.UtcNow;
-                Document leaseDocument = await this.TryReplaceLeaseAsync(lease, documentUri).ConfigureAwait(false);
-                if (leaseDocument != null)
-                {
-                    return DocumentServiceLease.FromDocument(leaseDocument);
-                }
+                DocumentServiceLease leaseDocument = await this.TryReplaceLeaseAsync((DocumentServiceLease)lease, partitionKey, itemId).ConfigureAwait(false);
 
                 Logger.InfoFormat("Partition {0} lease update conflict. Reading the current version of lease.", lease.PartitionId);
-                Document document;
+                DocumentServiceLease serverLease;
                 try
                 {
-                    IResourceResponse<Document> response = await this.client.ReadDocumentAsync(
-                        documentUri, requestOptions).ConfigureAwait(false);
-                    document = response.Resource;
+                    var response = await this.container.Items.ReadItemAsync<DocumentServiceLease>(
+                        partitionKey, itemId).ConfigureAwait(false);
+                    serverLease = response.Resource;
                 }
                 catch (DocumentClientException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
                 {
@@ -59,7 +54,6 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor.LeaseManagement
                     throw new LeaseLostException(lease);
                 }
 
-                DocumentServiceLease serverLease = DocumentServiceLease.FromDocument(document);
                 Logger.InfoFormat(
                     "Partition {0} update failed because the lease with token '{1}' was updated by host '{2}' with token '{3}'. Will retry, {4} retry(s) left.",
                     lease.PartitionId,
@@ -74,18 +68,29 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor.LeaseManagement
             throw new LeaseLostException(lease);
         }
 
-        private async Task<Document> TryReplaceLeaseAsync(ILease lease, Uri leaseUri)
+        private async Task<DocumentServiceLease> TryReplaceLeaseAsync(DocumentServiceLease lease, object partitionKey, string itemId)
         {
             try
             {
-                IResourceResponse<Document> response = await this.client.ReplaceDocumentAsync(leaseUri, lease, this.CreateIfMatchOptions(lease)).ConfigureAwait(false);
+                var response = await this.container.Items.ReplaceItemAsync<DocumentServiceLease>(
+                    partitionKey,
+                    itemId, 
+                    lease, 
+                    this.CreateIfMatchOptions(lease)).ConfigureAwait(false);
+                if (response.StatusCode == HttpStatusCode.PreconditionFailed)
+                {
+                    return null;
+                }
+
+                if (response.StatusCode == HttpStatusCode.Conflict ||
+                    response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    throw new LeaseLostException(lease, response.StatusCode == HttpStatusCode.NotFound);
+                }
+
                 return response.Resource;
             }
-            catch (DocumentClientException ex) when (ex.StatusCode == HttpStatusCode.PreconditionFailed)
-            {
-                return null;
-            }
-            catch (DocumentClientException ex)
+            catch (CosmosException ex)
             {
                 Logger.WarnFormat("Lease operation exception, status code: ", ex.StatusCode);
                 if (ex.StatusCode == HttpStatusCode.Conflict ||
@@ -98,10 +103,10 @@ namespace Microsoft.Azure.Documents.ChangeFeedProcessor.LeaseManagement
             }
         }
 
-        private RequestOptions CreateIfMatchOptions(ILease lease)
+        private CosmosItemRequestOptions CreateIfMatchOptions(ILease lease)
         {
             var ifMatchCondition = new AccessCondition { Type = AccessConditionType.IfMatch, Condition = lease.ConcurrencyToken };
-            return new RequestOptions { AccessCondition = ifMatchCondition };
+            return new CosmosItemRequestOptions { AccessCondition = ifMatchCondition };
         }
     }
 }

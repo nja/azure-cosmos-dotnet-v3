@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //----------------------------------------------------------------
 
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.Exceptions
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Exceptions
 {
     using System;
     using System.Runtime.Serialization;

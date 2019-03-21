@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //----------------------------------------------------------------
 
-namespace Microsoft.Azure.Documents.ChangeFeedProcessor.DocDBErrors
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.DocDBErrors
 {
     using System.Net;
     using Microsoft.Azure.Cosmos.Internal;
