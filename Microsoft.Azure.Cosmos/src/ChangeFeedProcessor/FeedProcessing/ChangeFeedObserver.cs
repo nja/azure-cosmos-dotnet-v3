@@ -7,19 +7,18 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Cosmos.Internal;
 
     /// <summary>
     /// This interface is used to deliver change events to document feed observers.
     /// </summary>
-    internal interface IChangeFeedObserver
+    public abstract class ChangeFeedObserver
     {
         /// <summary>
         /// This is called when change feed observer is opened.
         /// </summary>
         /// <param name="context">The context specifying partition for this observer, etc.</param>
         /// <returns>A Task to allow asynchronous execution.</returns>
-        Task OpenAsync(IChangeFeedObserverContext context);
+        public abstract Task OpenAsync(ChangeFeedObserverContext context);
 
         /// <summary>
         /// This is called when change feed observer is closed.
@@ -27,7 +26,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
         /// <param name="context">The context specifying partition for this observer, etc.</param>
         /// <param name="reason">Specifies the reason the observer is closed.</param>
         /// <returns>A Task to allow asynchronous execution.</returns>
-        Task CloseAsync(IChangeFeedObserverContext context, ChangeFeedObserverCloseReason reason);
+        public abstract Task CloseAsync(ChangeFeedObserverContext context, ChangeFeedObserverCloseReason reason);
 
         /// <summary>
         /// This is called when document changes are available on change feed.
@@ -36,6 +35,6 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
         /// <param name="docs">The documents changed.</param>
         /// <param name="cancellationToken">Token to signal that the parition processing is going to finish.</param>
         /// <returns>A Task to allow asynchronous execution.</returns>
-        Task ProcessChangesAsync(IChangeFeedObserverContext context, IReadOnlyList<Document> docs, CancellationToken cancellationToken);
+        public abstract Task ProcessChangesAsync(ChangeFeedObserverContext context, IReadOnlyList<dynamic> docs, CancellationToken cancellationToken);
     }
 }

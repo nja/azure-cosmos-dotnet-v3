@@ -10,19 +10,18 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Exceptions;
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Logging;
-    using Microsoft.Azure.Cosmos.Internal;
 
-    internal class ObserverExceptionWrappingChangeFeedObserverDecorator : IChangeFeedObserver
+    internal sealed class ObserverExceptionWrappingChangeFeedObserverDecorator : ChangeFeedObserver
     {
         private static readonly ILog Logger = LogProvider.GetCurrentClassLogger();
-        private IChangeFeedObserver changeFeedObserver;
+        private ChangeFeedObserver changeFeedObserver;
 
-        public ObserverExceptionWrappingChangeFeedObserverDecorator(IChangeFeedObserver changeFeedObserver)
+        public ObserverExceptionWrappingChangeFeedObserverDecorator(ChangeFeedObserver changeFeedObserver)
         {
             this.changeFeedObserver = changeFeedObserver;
         }
 
-        public async Task CloseAsync(IChangeFeedObserverContext context, ChangeFeedObserverCloseReason reason)
+        public override async Task CloseAsync(ChangeFeedObserverContext context, ChangeFeedObserverCloseReason reason)
         {
             try
             {
@@ -35,7 +34,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
             }
         }
 
-        public async Task OpenAsync(IChangeFeedObserverContext context)
+        public override async Task OpenAsync(ChangeFeedObserverContext context)
         {
             try
             {
@@ -48,7 +47,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
             }
         }
 
-        public async Task ProcessChangesAsync(IChangeFeedObserverContext context, IReadOnlyList<Document> docs, CancellationToken cancellationToken)
+        public override async Task ProcessChangesAsync(ChangeFeedObserverContext context, IReadOnlyList<dynamic> docs, CancellationToken cancellationToken)
         {
             try
             {

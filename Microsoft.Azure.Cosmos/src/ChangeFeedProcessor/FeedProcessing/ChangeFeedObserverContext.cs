@@ -1,4 +1,4 @@
-//----------------------------------------------------------------
+﻿//----------------------------------------------------------------
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //----------------------------------------------------------------
 
@@ -6,30 +6,18 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
 {
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos;
-    using Microsoft.Azure.Cosmos.Internal;
 
     /// <summary>
-    /// The context passed to <see cref="IChangeFeedObserver"/> events.
+    /// Represents the context passed to <see cref="ChangeFeedObserver"/> events.
     /// </summary>
-    internal class ChangeFeedObserverContext : IChangeFeedObserverContext
+    public abstract class ChangeFeedObserverContext
     {
-        private readonly IPartitionCheckpointer checkpointer;
+        /// <summary>
+        /// Gets the id of the partition for the current event.
+        /// </summary>
+        public abstract string PartitionKeyRangeId { get; }
 
-        internal ChangeFeedObserverContext(string partitionId)
-        {
-            this.PartitionKeyRangeId = partitionId;
-        }
-
-        internal ChangeFeedObserverContext(string partitionId, IFeedResponse<Document> feedResponse, IPartitionCheckpointer checkpointer)
-        {
-            this.PartitionKeyRangeId = partitionId;
-            this.FeedResponse = feedResponse;
-            this.checkpointer = checkpointer;
-        }
-
-        public string PartitionKeyRangeId { get; }
-
-        public IFeedResponse<Document> FeedResponse { get; }
+        //public abstract IFeedResponse<Document> FeedResponse { get; }
 
         /// <summary>
         /// Checkpoints progress of a stream. This method is valid only if manual checkpoint was configured.
@@ -38,9 +26,6 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
         /// In case of automatic checkpointing this is method throws.
         /// </summary>
         /// <exception cref="Exceptions.LeaseLostException">Thrown if other host acquired the lease or the lease was deleted</exception>
-        public virtual Task CheckpointAsync()
-        {
-            return this.checkpointer.CheckpointPartitionAsync(this.FeedResponse.ResponseContinuation);
-        }
+        public abstract Task CheckpointAsync();
     }
 }

@@ -6,87 +6,53 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
-    using Microsoft.Azure.Cosmos.Internal;
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
-    using Newtonsoft.Json;
 
-    [Serializable]
-    internal class DocumentServiceLease : ILease
+    /// <summary>
+    /// Represents a lease that is persisted as a document in the lease collection.
+    /// Leases are used to:
+    /// * Keep track of the <see cref="ChangeFeedProcessor"/> progress for a particular Partition Key Range.
+    /// * Distribute load between different instances of <see cref="ChangeFeedProcessor"/>.
+    /// * Ensure reliable recovery for cases when an instance of <see cref="ChangeFeedProcessor"/> gets disconnected, hangs or crashes.
+    /// </summary>
+    public abstract class DocumentServiceLease
     {
-        private static readonly DateTime UnixStartTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-
-        public DocumentServiceLease()
-        {
-        }
-
-        public DocumentServiceLease(DocumentServiceLease other)
-        {
-            this.Id = other.Id;
-            this.PartitionId = other.PartitionId;
-            this.Owner = other.Owner;
-            this.ContinuationToken = other.ContinuationToken;
-            this.ETag = other.ETag;
-            this.TS = other.TS;
-            this.ExplicitTimestamp = other.ExplicitTimestamp;
-            this.Properties = other.Properties;
-        }
-
-        [JsonProperty("id")]
-        public string Id { get; set; }
-
-        [JsonProperty("_etag")]
-        public string ETag { get; set; }
-
-        [JsonProperty("PartitionId")]
-        public string PartitionId { get; set; }
-
-        [JsonProperty("Owner")]
-        public string Owner { get; set; }
+        /// <summary>
+        /// Gets the processing distribution unit identifier.
+        /// </summary>
+        public abstract string PartitionId { get; }
 
         /// <summary>
-        /// Gets or sets the current value for the offset in the stream.
+        /// Gets or sets the host name owner of the lease.
+        /// The Owner keeps track which <see cref="ChangeFeedProcessor"/> is currently processing that Partition Key Range.
         /// </summary>
-        [JsonProperty("ContinuationToken")]
-        public string ContinuationToken { get; set; }
+        public abstract string Owner { get; set; }
 
-        [JsonIgnore]
-        public DateTime Timestamp
-        {
-            get { return this.ExplicitTimestamp ?? UnixStartTime.AddSeconds(this.TS); }
-            set { this.ExplicitTimestamp = value; }
-        }
+        /// <summary>
+        /// Gets or sets the Timestamp of the lease.
+        /// Timestamp is used to determine lease expiration.
+        /// </summary>
+        public abstract DateTime Timestamp { get; set; }
 
-        [JsonIgnore]
-        public string ConcurrencyToken => this.ETag;
+        /// <summary>
+        /// Gets or sets the Continuation Token.
+        /// Continuation Token is used to determine the last processed point of the Change Feed.
+        /// </summary>
+        public abstract string ContinuationToken { get; set; }
 
-        [JsonProperty("properties")]
-        public Dictionary<string, string> Properties { get; set; } = new Dictionary<string, string>();
+        /// <summary>
+        /// Gets the lease Id.
+        /// </summary>
+        public abstract string Id { get; }
 
-        [JsonProperty("timestamp")]
-        private DateTime? ExplicitTimestamp { get; set; }
+        /// <summary>
+        /// Gets the Concurrency Token.
+        /// </summary>
+        public abstract string ConcurrencyToken { get; }
 
-        [JsonProperty("_ts")]
-        private long TS { get; set; }
-
-        public static DocumentServiceLease FromDocument(Document document)
-        {
-            if (document == null)
-                throw new ArgumentNullException(nameof(document));
-            string json = JsonConvert.SerializeObject(document);
-            return JsonConvert.DeserializeObject<DocumentServiceLease>(json);
-        }
-
-        public override string ToString()
-        {
-            return string.Format(
-                CultureInfo.InvariantCulture,
-                "{0} Owner='{1}' Continuation={2} Timestamp(local)={3} Timestamp(server)={4}",
-                this.Id,
-                this.Owner,
-                this.ContinuationToken,
-                this.Timestamp.ToUniversalTime(),
-                UnixStartTime.AddSeconds(this.TS).ToUniversalTime());
-        }
+        /// <summary>
+        /// Gets or sets custom lease properties which can be managed from <see cref="PartitionLoadBalancingStrategy"/>.
+        /// </summary>
+        public abstract Dictionary<string, string> Properties { get; set; }
     }
 }

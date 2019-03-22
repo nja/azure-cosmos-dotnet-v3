@@ -5,6 +5,7 @@
 namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Monitoring
 {
     using System;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement;
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
 
     /// <summary>
@@ -19,7 +20,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Monitoring
         /// <param name="operation">The operation.</param>
         /// <param name="lease">The lease.</param>
         /// <param name="exception">The exception.</param>
-        public HealthMonitoringRecord(HealthSeverity severity, MonitoredOperation operation, ILease lease, Exception exception)
+        public HealthMonitoringRecord(HealthSeverity severity, MonitoredOperation operation, DocumentServiceLease lease, Exception exception)
         {
             if (lease == null) throw new ArgumentNullException(nameof(lease));
             this.Severity = severity;
@@ -41,7 +42,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Monitoring
         /// <summary>
         /// Gets the lease which triggered the operation.
         /// </summary>
-        public ILease Lease { get; }
+        public DocumentServiceLease Lease { get; }
 
         /// <summary>
         /// Gets the exception details in case of failure.

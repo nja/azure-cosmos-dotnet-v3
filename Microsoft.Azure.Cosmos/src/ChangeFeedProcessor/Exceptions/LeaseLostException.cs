@@ -6,7 +6,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Exceptions
 {
     using System;
     using System.Runtime.Serialization;
-    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement;
 
     /// <summary>
     /// Exception occurred when lease is lost, that would typically happen when it is taken by another host. Other cases: communication failure, number of retries reached, lease not found.
@@ -27,7 +27,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Exceptions
         /// Initializes a new instance of the <see cref="LeaseLostException" /> class using the specified lease.
         /// </summary>
         /// <param name="lease">Instance of a lost lease.</param>
-        public LeaseLostException(ILease lease)
+        public LeaseLostException(DocumentServiceLease lease)
             : base(DefaultMessage)
         {
             this.Lease = lease;
@@ -57,7 +57,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Exceptions
         /// </summary>
         /// <param name="lease">Instance of a lost lease.</param>
         /// <param name="isGone">Whether lease doesn't exist.</param>
-        public LeaseLostException(ILease lease, bool isGone)
+        public LeaseLostException(DocumentServiceLease lease, bool isGone)
             : base(DefaultMessage)
         {
             this.Lease = lease;
@@ -70,7 +70,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Exceptions
         /// <param name="lease">Instance of a lost lease.</param>
         /// <param name="innerException">The inner exception.</param>
         /// <param name="isGone">Whether lease doesn't exist.</param>
-        public LeaseLostException(ILease lease, Exception innerException, bool isGone)
+        public LeaseLostException(DocumentServiceLease lease, Exception innerException, bool isGone)
             : base(DefaultMessage, innerException)
         {
             this.Lease = lease;
@@ -85,14 +85,14 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Exceptions
         protected LeaseLostException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-            this.Lease = (ILease)info.GetValue("Lease", typeof(ILease));
+            this.Lease = (DocumentServiceLease)info.GetValue("Lease", typeof(DocumentServiceLease));
             this.IsGone = (bool)info.GetValue("IsGone", typeof(bool));
         }
 
         /// <summary>
         /// Gets the lost lease.
         /// </summary>
-        public ILease Lease { get; }
+        public DocumentServiceLease Lease { get; }
 
         /// <summary>
         /// Gets a value indicating whether lease doesn't exist.

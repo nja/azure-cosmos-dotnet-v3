@@ -9,11 +9,11 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Monitoring
     /// <summary>
     /// A strategy for handling the situation when the change feed processor is not able to acquire lease due to unknown reasons.
     /// </summary>
-    public interface IHealthMonitor
+    public abstract class HealthMonitor
     {
         /// <summary>
         /// A logic to handle that exceptional situation.
         /// </summary>
-        Task InspectAsync(HealthMonitoringRecord record);
+        public abstract Task InspectAsync(HealthMonitoringRecord record);
     }
 }

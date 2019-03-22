@@ -4,16 +4,15 @@
 
 namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
 {
-    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
     using Microsoft.Azure.Cosmos;
 
     /// <summary>
     /// Used to create request options for partitioned lease collections, when partition key is defined as /id.
     /// </summary>
-    internal class PartitionedByIdCollectionRequestOptionsFactory : IRequestOptionsFactory
+    internal sealed class PartitionedByIdCollectionRequestOptionsFactory : RequestOptionsFactory
     {
-        public string GetPartitionKey(string itemId) => itemId;
+        public override string GetPartitionKey(string itemId) => itemId;
 
-        public FeedOptions CreateFeedOptions() => new FeedOptions { EnableCrossPartitionQuery = true };
+        public override FeedOptions CreateFeedOptions() => new FeedOptions { EnableCrossPartitionQuery = true };
     }
 }

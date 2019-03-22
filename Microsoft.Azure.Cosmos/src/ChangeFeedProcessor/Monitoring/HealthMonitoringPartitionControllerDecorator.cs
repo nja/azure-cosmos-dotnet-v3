@@ -5,24 +5,24 @@
 namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
 {
     using System;
-    using System.Threading;
     using Microsoft.Azure.Cosmos.Internal;
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Monitoring;
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement;
 
-    internal class HealthMonitoringPartitionControllerDecorator : IPartitionController
+    internal class HealthMonitoringPartitionControllerDecorator : PartitionController
     {
-        private readonly IPartitionController inner;
-        private readonly IHealthMonitor monitor;
+        private readonly PartitionController inner;
+        private readonly HealthMonitor monitor;
 
-        public HealthMonitoringPartitionControllerDecorator(IPartitionController inner, IHealthMonitor monitor)
+        public HealthMonitoringPartitionControllerDecorator(PartitionController inner, HealthMonitor monitor)
         {
             this.inner = inner ?? throw new ArgumentNullException(nameof(inner));
             this.monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
         }
 
-        public async Task AddOrUpdateLeaseAsync(ILease lease)
+        public override async Task AddOrUpdateLeaseAsync(DocumentServiceLease lease)
         {
             try
             {
@@ -41,12 +41,12 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
             }
         }
 
-        public Task InitializeAsync()
+        public override Task InitializeAsync()
         {
             return this.inner.InitializeAsync();
         }
 
-        public Task ShutdownAsync()
+        public override Task ShutdownAsync()
         {
             return this.inner.ShutdownAsync();
         }

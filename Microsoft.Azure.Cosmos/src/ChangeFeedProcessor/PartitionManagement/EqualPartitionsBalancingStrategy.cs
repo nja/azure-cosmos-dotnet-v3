@@ -8,9 +8,10 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement;
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Logging;
 
-    internal class EqualPartitionsBalancingStrategy : IParitionLoadBalancingStrategy
+    internal sealed class EqualPartitionsBalancingStrategy : PartitionLoadBalancingStrategy
     {
         private static readonly ILog Logger = LogProvider.GetCurrentClassLogger();
         private readonly string hostName;
@@ -27,17 +28,17 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
             this.leaseExpirationInterval = leaseExpirationInterval;
         }
 
-        public IEnumerable<ILease> SelectLeasesToTake(IEnumerable<ILease> allLeases)
+        public override IEnumerable<DocumentServiceLease> SelectLeasesToTake(IEnumerable<DocumentServiceLease> allLeases)
         {
             var workerToPartitionCount = new Dictionary<string, int>();
-            var expiredLeases = new List<ILease>();
-            var allPartitions = new Dictionary<string, ILease>();
+            var expiredLeases = new List<DocumentServiceLease>();
+            var allPartitions = new Dictionary<string, DocumentServiceLease>();
             this.CategorizeLeases(allLeases, allPartitions, expiredLeases, workerToPartitionCount);
 
             int partitionCount = allPartitions.Count;
             int workerCount = workerToPartitionCount.Count;
             if (partitionCount <= 0)
-                return Enumerable.Empty<ILease>();
+                return Enumerable.Empty<DocumentServiceLease>();
 
             int target = this.CalculateTargetPartitionCount(partitionCount, workerCount);
             int myCount = workerToPartitionCount[this.hostName];
@@ -56,22 +57,22 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
                 Math.Max(partitionsNeededForMe, 0));
 
             if (partitionsNeededForMe <= 0)
-                return Enumerable.Empty<ILease>();
+                return Enumerable.Empty<DocumentServiceLease>();
 
             if (expiredLeases.Count > 0)
             {
                 return expiredLeases.Take(partitionsNeededForMe);
             }
 
-            ILease stolenLease = GetLeaseToSteal(workerToPartitionCount, target, partitionsNeededForMe, allPartitions);
-            return stolenLease == null ? Enumerable.Empty<ILease>() : new[] { stolenLease };
+            DocumentServiceLease stolenLease = GetLeaseToSteal(workerToPartitionCount, target, partitionsNeededForMe, allPartitions);
+            return stolenLease == null ? Enumerable.Empty<DocumentServiceLease>() : new[] { stolenLease };
         }
 
-        private static ILease GetLeaseToSteal(
+        private static DocumentServiceLease GetLeaseToSteal(
             Dictionary<string, int> workerToPartitionCount,
             int target,
             int partitionsNeededForMe,
-            Dictionary<string, ILease> allPartitions)
+            Dictionary<string, DocumentServiceLease> allPartitions)
         {
             KeyValuePair<string, int> workerToStealFrom = FindWorkerWithMostPartitions(workerToPartitionCount);
             if (workerToStealFrom.Value > target - (partitionsNeededForMe > 1 ? 1 : 0))
@@ -118,12 +119,12 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
         }
 
         private void CategorizeLeases(
-            IEnumerable<ILease> allLeases,
-            Dictionary<string, ILease> allPartitions,
-            List<ILease> expiredLeases,
+            IEnumerable<DocumentServiceLease> allLeases,
+            Dictionary<string, DocumentServiceLease> allPartitions,
+            List<DocumentServiceLease> expiredLeases,
             Dictionary<string, int> workerToPartitionCount)
         {
-            foreach (ILease lease in allLeases)
+            foreach (DocumentServiceLease lease in allLeases)
             {
                 Debug.Assert(lease.PartitionId != null, "TakeLeasesAsync: lease.PartitionId cannot be null.");
 
@@ -154,7 +155,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
             }
         }
 
-        private bool IsExpired(ILease lease)
+        private bool IsExpired(DocumentServiceLease lease)
         {
             return lease.Timestamp.ToUniversalTime() + this.leaseExpirationInterval < DateTime.UtcNow;
         }

@@ -9,7 +9,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.DocDBErrors
 
     internal static class SubStatusHelpers
     {
-        public static SubStatusCode GetSubStatusCode(this DocumentClientException exception)
+        public static SubStatusCodes GetSubStatusCode(this DocumentClientException exception)
         {
             const string subStatusHeaderName = "x-ms-substatus";
 
@@ -18,10 +18,10 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.DocDBErrors
             {
                 int subStatusCode;
                 if (int.TryParse(valueSubStatus, NumberStyles.Integer, CultureInfo.InvariantCulture, out subStatusCode))
-                    return (SubStatusCode)subStatusCode;
+                    return (SubStatusCodes)subStatusCode;
             }
 
-            return SubStatusCode.Undefined;
+            return SubStatusCodes.Unknown;
         }
     }
 }

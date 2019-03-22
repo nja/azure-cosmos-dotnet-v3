@@ -8,16 +8,15 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Cosmos.Internal;
 
-    internal class AutoCheckpointer : IChangeFeedObserver
+    internal sealed class AutoCheckpointer : ChangeFeedObserver
     {
         private readonly CheckpointFrequency checkpointFrequency;
-        private readonly IChangeFeedObserver observer;
+        private readonly ChangeFeedObserver observer;
         private int processedDocCount;
         private DateTime lastCheckpointTime = DateTime.UtcNow;
 
-        public AutoCheckpointer(CheckpointFrequency checkpointFrequency, IChangeFeedObserver observer)
+        public AutoCheckpointer(CheckpointFrequency checkpointFrequency, ChangeFeedObserver observer)
         {
             if (checkpointFrequency == null)
                 throw new ArgumentNullException(nameof(checkpointFrequency));
@@ -28,17 +27,17 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
             this.observer = observer;
         }
 
-        public Task OpenAsync(IChangeFeedObserverContext context)
+        public override Task OpenAsync(ChangeFeedObserverContext context)
         {
             return this.observer.OpenAsync(context);
         }
 
-        public Task CloseAsync(IChangeFeedObserverContext context, ChangeFeedObserverCloseReason reason)
+        public override Task CloseAsync(ChangeFeedObserverContext context, ChangeFeedObserverCloseReason reason)
         {
             return this.observer.CloseAsync(context, reason);
         }
 
-        public async Task ProcessChangesAsync(IChangeFeedObserverContext context, IReadOnlyList<Document> docs, CancellationToken cancellationToken)
+        public override async Task ProcessChangesAsync(ChangeFeedObserverContext context, IReadOnlyList<dynamic> docs, CancellationToken cancellationToken)
         {
             await this.observer.ProcessChangesAsync(context, docs, cancellationToken).ConfigureAwait(false);
             this.processedDocCount += docs.Count;

@@ -8,30 +8,27 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Cosmos.Internal;
 
-    internal class ChangeFeedObserverBase : IChangeFeedObserver
+    internal sealed class ChangeFeedObserverBase : ChangeFeedObserver
     {
         private readonly Func<IReadOnlyList<dynamic>, CancellationToken, Task> onChanges;
-
-        public ChangeFeedObserverBase() { }
 
         public ChangeFeedObserverBase(Func<IReadOnlyList<dynamic>, CancellationToken, Task> onChanges)
         {
             this.onChanges = onChanges;
         }
 
-        public Task CloseAsync(IChangeFeedObserverContext context, ChangeFeedObserverCloseReason reason)
+        public override Task CloseAsync(ChangeFeedObserverContext context, ChangeFeedObserverCloseReason reason)
         {
             return Task.CompletedTask;
         }
 
-        public Task OpenAsync(IChangeFeedObserverContext context)
+        public override Task OpenAsync(ChangeFeedObserverContext context)
         {
             return Task.CompletedTask;
         }
 
-        public Task ProcessChangesAsync(IChangeFeedObserverContext context, IReadOnlyList<Document> docs, CancellationToken cancellationToken)
+        public override Task ProcessChangesAsync(ChangeFeedObserverContext context, IReadOnlyList<dynamic> docs, CancellationToken cancellationToken)
         {
             return this.onChanges(docs, cancellationToken);
         }

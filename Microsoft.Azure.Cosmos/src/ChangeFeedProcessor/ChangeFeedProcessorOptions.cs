@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
     using Microsoft.Azure.Cosmos;
 
     /// <summary>
-    /// Options to control various aspects of partition distribution happening within <see cref="ChangeFeedProcessor"/> instance.
+    /// Options to control various aspects of partition distribution happening within <see cref="ChangeFeedProcessorCore"/> instance.
     /// </summary>
     public class ChangeFeedProcessorOptions
     {
@@ -31,7 +31,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
         }
 
         /// <summary>
-        /// Gets or sets renew interval for all leases for partitions currently held by <see cref="ChangeFeedProcessor"/> instance.
+        /// Gets or sets renew interval for all leases for partitions currently held by <see cref="ChangeFeedProcessorCore"/> instance.
         /// </summary>
         public TimeSpan LeaseRenewInterval { get; set; }
 
@@ -42,7 +42,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
 
         /// <summary>
         /// Gets or sets the interval for which the lease is taken on a lease representing a partition. If the lease is not renewed within this
-        /// interval, it will cause it to expire and ownership of the partition will move to another <see cref="ChangeFeedProcessor"/> instance.
+        /// interval, it will cause it to expire and ownership of the partition will move to another <see cref="ChangeFeedProcessorCore"/> instance.
         /// </summary>
         public TimeSpan LeaseExpirationInterval { get; set; }
 
@@ -57,7 +57,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
         public CheckpointFrequency CheckpointFrequency { get; set; }
 
         /// <summary>
-        /// Gets or sets a prefix to be used as part of the lease id. This can be used to support multiple instances of <see cref="ChangeFeedProcessor"/>
+        /// Gets or sets a prefix to be used as part of the lease id. This can be used to support multiple instances of <see cref="ChangeFeedProcessorCore"/>
         /// instances pointing at the same feed while using the same auxiliary collection.
         /// </summary>
         public string LeasePrefix { get; set; }

@@ -4,20 +4,18 @@
 
 namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Monitoring
 {
-    using System;
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Logging;
-    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
 
     /// <summary>
     /// A monitor which logs the errors only.
     /// </summary>
-    internal class TraceHealthMonitor : IHealthMonitor
+    internal sealed class TraceHealthMonitor : HealthMonitor
     {
         private static readonly ILog Logger = LogProvider.GetCurrentClassLogger();
 
         /// <inheritdoc />
-        public Task InspectAsync(HealthMonitoringRecord record)
+        public override Task InspectAsync(HealthMonitoringRecord record)
         {
             if (record.Severity == HealthSeverity.Error)
             {

@@ -7,11 +7,11 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
     using System;
 
     /// <summary>
-    /// Factory class used to create instance(s) of <see cref="IChangeFeedObserver"/>.
+    /// Factory class used to create instance(s) of <see cref="ChangeFeedObserver"/>.
     /// </summary>
-    internal class CheckpointerObserverFactory : IChangeFeedObserverFactory
+    internal sealed class CheckpointerObserverFactory : ChangeFeedObserverFactory
     {
-        private readonly IChangeFeedObserverFactory observerFactory;
+        private readonly ChangeFeedObserverFactory observerFactory;
         private readonly CheckpointFrequency checkpointFrequency;
 
         /// <summary>
@@ -19,7 +19,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
         /// </summary>
         /// <param name="observerFactory">Instance of Observer Factory</param>
         /// <param name="checkpointFrequency">Defined <see cref="CheckpointFrequency"/></param>
-        public CheckpointerObserverFactory(IChangeFeedObserverFactory observerFactory, CheckpointFrequency checkpointFrequency)
+        public CheckpointerObserverFactory(ChangeFeedObserverFactory observerFactory, CheckpointFrequency checkpointFrequency)
         {
             if (observerFactory == null)
                 throw new ArgumentNullException(nameof(observerFactory));
@@ -31,12 +31,12 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
         }
 
         /// <summary>
-        /// Creates a new instance of <see cref="IChangeFeedObserver"/>.
+        /// Creates a new instance of <see cref="ChangeFeedObserver"/>.
         /// </summary>
-        /// <returns>Created instance of <see cref="IChangeFeedObserver"/>.</returns>
-        public IChangeFeedObserver CreateObserver()
+        /// <returns>Created instance of <see cref="ChangeFeedObserver"/>.</returns>
+        public override ChangeFeedObserver CreateObserver()
         {
-            IChangeFeedObserver observer = new ObserverExceptionWrappingChangeFeedObserverDecorator(this.observerFactory.CreateObserver());
+            ChangeFeedObserver observer = new ObserverExceptionWrappingChangeFeedObserverDecorator(this.observerFactory.CreateObserver());
             if (this.checkpointFrequency.ExplicitCheckpoint) return observer;
 
             return new AutoCheckpointer(this.checkpointFrequency, observer);

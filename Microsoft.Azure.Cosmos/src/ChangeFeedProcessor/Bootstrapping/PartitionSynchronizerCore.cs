@@ -17,19 +17,19 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Bootstrapping
     using Microsoft.Azure.Cosmos;
     using Microsoft.Azure.Cosmos.Internal;
 
-    internal class PartitionSynchronizer : IPartitionSynchronizer
+    internal sealed class PartitionSynchronizerCore : PartitionSynchronizer
     {
         private static readonly ILog Logger = LogProvider.GetCurrentClassLogger();
         private readonly CosmosContainer container;
-        private readonly ILeaseContainer leaseContainer;
-        private readonly ILeaseManager leaseManager;
+        private readonly DocumentServiceLeaseContainer leaseContainer;
+        private readonly DocumentServiceLeaseManager leaseManager;
         private readonly int degreeOfParallelism;
         private readonly int maxBatchSize;
 
-        public PartitionSynchronizer(
+        public PartitionSynchronizerCore(
             CosmosContainer container,
-            ILeaseContainer leaseContainer,
-            ILeaseManager leaseManager,
+            DocumentServiceLeaseContainer leaseContainer,
+            DocumentServiceLeaseManager leaseManager,
             int degreeOfParallelism,
             int maxBatchSize)
         {
@@ -40,7 +40,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Bootstrapping
             this.maxBatchSize = maxBatchSize;
         }
 
-        public async Task CreateMissingLeasesAsync()
+        public override async Task CreateMissingLeasesAsync()
         {
             List<PartitionKeyRange> ranges = await this.EnumPartitionKeyRangesAsync().ConfigureAwait(false);
             var partitionIds = new HashSet<string>(ranges.Select(range => range.Id));
@@ -48,7 +48,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Bootstrapping
             await this.CreateLeasesAsync(partitionIds).ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<ILease>> SplitPartitionAsync(ILease lease)
+        public override async Task<IEnumerable<DocumentServiceLease>> SplitPartitionAsync(DocumentServiceLease lease)
         {
             if (lease == null)
                 throw new ArgumentNullException(nameof(lease));
@@ -67,11 +67,11 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Bootstrapping
                 throw new InvalidOperationException();
             }
 
-            var newLeases = new ConcurrentQueue<ILease>();
+            var newLeases = new ConcurrentQueue<DocumentServiceLease>();
             await addedPartitionIds.ForEachAsync(
                 async addedRangeId =>
                 {
-                    ILease newLease = await this.leaseManager.CreateLeaseIfNotExistAsync(addedRangeId, lastContinuationToken).ConfigureAwait(false);
+                    DocumentServiceLease newLease = await this.leaseManager.CreateLeaseIfNotExistAsync(addedRangeId, lastContinuationToken).ConfigureAwait(false);
                     if (newLease != null)
                     {
                         newLeases.Enqueue(newLease);
@@ -123,7 +123,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Bootstrapping
         private async Task CreateLeasesAsync(HashSet<string> partitionIds)
         {
             // Get leases after getting ranges, to make sure that no other hosts checked in continuation for split partition after we got leases.
-            IEnumerable<ILease> leases = await this.leaseContainer.GetAllLeasesAsync().ConfigureAwait(false);
+            IEnumerable<DocumentServiceLease> leases = await this.leaseContainer.GetAllLeasesAsync().ConfigureAwait(false);
             var existingPartitionIds = new HashSet<string>(leases.Select(lease => lease.PartitionId));
             var addedPartitionIds = new HashSet<string>(partitionIds);
             addedPartitionIds.ExceptWith(existingPartitionIds);

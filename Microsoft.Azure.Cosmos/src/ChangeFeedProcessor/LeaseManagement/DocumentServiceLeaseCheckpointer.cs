@@ -6,12 +6,11 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
 {
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Exceptions;
-    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
 
     /// <summary>
-    /// Used to checkpoitn leases.
+    /// Used to checkpoint leases.
     /// </summary>
-    public interface ILeaseCheckpointer
+    public abstract class DocumentServiceLeaseCheckpointer
     {
         /// <summary>
         /// Checkpoint the lease.
@@ -20,6 +19,6 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
         /// <param name="continuationToken">Continuation token</param>
         /// <returns>Updated renewed lease</returns>
         /// <exception cref="LeaseLostException">Thrown if other host acquired the lease or lease was deleted</exception>
-        Task<ILease> CheckpointAsync(ILease lease, string continuationToken);
+        public abstract Task<DocumentServiceLease> CheckpointAsync(DocumentServiceLease lease, string continuationToken);
     }
 }

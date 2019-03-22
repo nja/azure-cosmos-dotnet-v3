@@ -2,36 +2,25 @@
 // Copyright (c) Microsoft Corporation.  Licensed under the MIT license.
 //----------------------------------------------------------------
 
-namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
+namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
 {
-    using System;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Logging;
-    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
 
-    internal class ChangeFeedProcessor : IChangeFeedProcessor
+    /// <summary>
+    /// Provides an API to start and stop a <see cref="ChangeFeedProcessorCore"/> instance created by <see cref="ChangeFeedProcessorBuilder.BuildAsync"/>.
+    /// </summary>
+    public abstract class ChangeFeedProcessor
     {
-        private static readonly ILog Logger = LogProvider.GetCurrentClassLogger();
-        private readonly IPartitionManager partitionManager;
+        /// <summary>
+        /// Start listening for changes.
+        /// </summary>
+        /// <returns>A <see cref="Task"/>.</returns>
+        public abstract Task StartAsync();
 
-        public ChangeFeedProcessor(IPartitionManager partitionManager)
-        {
-            if (partitionManager == null) throw new ArgumentNullException(nameof(partitionManager));
-            this.partitionManager = partitionManager;
-        }
-
-        public async Task StartAsync()
-        {
-            Logger.InfoFormat("Starting processor...");
-            await this.partitionManager.StartAsync().ConfigureAwait(false);
-            Logger.InfoFormat("Processor started.");
-        }
-
-        public async Task StopAsync()
-        {
-            Logger.InfoFormat("Stopping processor...");
-            await this.partitionManager.StopAsync().ConfigureAwait(false);
-            Logger.InfoFormat("Processor stopped.");
-        }
+        /// <summary>
+        /// Stops listening for changes.
+        /// </summary>
+        /// <returns>A <see cref="Task"/>.</returns>
+        public abstract Task StopAsync();
     }
 }

@@ -10,17 +10,15 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos;
-    using Microsoft.Azure.Cosmos.Internal;
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Bootstrapping;
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing;
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement;
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Logging;
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Monitoring;
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
-    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Utils;
 
     /// <summary>
-    /// Provides a flexible way to to create an instance of <see cref="IChangeFeedProcessor"/> with custom set of parameters.
+    /// Provides a flexible way to to create an instance of <see cref="ChangeFeedProcessor"/> with custom set of parameters.
     /// </summary>
     /// <example>
     /// <code language="C#">
@@ -115,12 +113,12 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
         private readonly TimeSpan sleepTime = TimeSpan.FromSeconds(15);
         private readonly TimeSpan lockTime = TimeSpan.FromSeconds(30);
         private ChangeFeedProcessorOptions changeFeedProcessorOptions;
-        private IChangeFeedObserverFactory observerFactory = null;
+        private ChangeFeedObserverFactory observerFactory = null;
         private string databaseResourceId;
         private string collectionResourceId;
-        private IParitionLoadBalancingStrategy loadBalancingStrategy;
-        private IPartitionProcessorFactory partitionProcessorFactory = null;
-        private IHealthMonitor healthMonitor;
+        private PartitionLoadBalancingStrategy loadBalancingStrategy;
+        private PartitionProcessorFactory partitionProcessorFactory = null;
+        private HealthMonitor healthMonitor;
         private CosmosContainer monitoredContainer;
         private CosmosContainer leaseContainer;
 
@@ -135,7 +133,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
         /// <remarks>
         /// Internal for testing only, otherwise it would be private.
         /// </remarks>
-        internal ILeaseStoreManager LeaseStoreManager
+        internal DocumentServiceLeaseStoreManager LeaseStoreManager
         {
             get;
             private set;
@@ -149,7 +147,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
         internal ChangeFeedProcessorBuilder(CosmosContainer cosmosContainer, Func<IReadOnlyList<dynamic>, CancellationToken, Task> onChanges)
             : this(cosmosContainer)
         {
-            this.observerFactory = new ChangeFeedObserverFactory<ChangeFeedObserverBase>(() => new ChangeFeedObserverBase(onChanges));
+            this.observerFactory = new ChangeFeedObserverFactoryCore(onChanges);
         }
 
         /// <summary>
@@ -163,44 +161,8 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
             return this;
         }
 
-        ///// <summary>
-        ///// Sets the <see cref="DocumentCollectionInfo"/> of the collection to listen for changes.
-        ///// </summary>
-        ///// <param name="feedCollectionLocation"><see cref="DocumentCollectionInfo"/> of the collection to listen for changes</param>
-        ///// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
-        //public ChangeFeedProcessorBuilder WithFeedCollection(DocumentCollectionInfo feedCollectionLocation)
-        //{
-        //    if (feedCollectionLocation == null) throw new ArgumentNullException(nameof(feedCollectionLocation));
-        //    this.feedCollectionLocation = feedCollectionLocation.Canonicalize();
-        //    return this;
-        //}
-
-        ///// <summary>
-        ///// Sets an existing <see cref="CosmosClient"/> to be used to read from the monitored collection.
-        ///// </summary>
-        ///// <param name="feedDocumentClient">The instance of <see cref="CosmosClient"/> to use.</param>
-        ///// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
-        //public ChangeFeedProcessorBuilder WithFeedDocumentClient(CosmosClient feedDocumentClient)
-        //{
-        //    if (feedDocumentClient == null) throw new ArgumentNullException(nameof(feedDocumentClient));
-        //    this.feedCosmosClient = new ChangeFeedDocumentClient(feedDocumentClient);
-        //    return this;
-        //}
-
-        ///// <summary>
-        ///// Sets an existing <see cref="IChangeFeedDocumentClient"/> to be used to read from the monitored collection.
-        ///// </summary>
-        ///// <param name="feedDocumentClient">The instance of <see cref="IChangeFeedDocumentClient"/> to use.</param>
-        ///// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
-        //public ChangeFeedProcessorBuilder WithFeedDocumentClient(IChangeFeedDocumentClient feedDocumentClient)
-        //{
-        //    if (feedDocumentClient == null) throw new ArgumentNullException(nameof(feedDocumentClient));
-        //    this.feedCosmosClient = feedDocumentClient;
-        //    return this;
-        //}
-
         /// <summary>
-        /// Sets the <see cref="ChangeFeedProcessorOptions"/> to be used by this instance of <see cref="IChangeFeedProcessor"/>.
+        /// Sets the <see cref="ChangeFeedProcessorOptions"/> to be used by this instance of <see cref="ChangeFeedProcessor"/>.
         /// </summary>
         /// <param name="changeFeedProcessorOptions">The instance of <see cref="ChangeFeedProcessorOptions"/> to use.</param>
         /// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
@@ -210,54 +172,6 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
             this.changeFeedProcessorOptions = changeFeedProcessorOptions;
             return this;
         }
-
-        ///// <summary>
-        ///// Sets the <see cref="FeedProcessing.IChangeFeedObserverFactory"/> to be used to generate <see cref="IChangeFeedObserver"/>
-        ///// </summary>
-        ///// <param name="observerFactory">The instance of <see cref="FeedProcessing.IChangeFeedObserverFactory"/> to use.</param>
-        ///// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
-        //public ChangeFeedProcessorBuilder WithObserverFactory(FeedProcessing.IChangeFeedObserverFactory observerFactory)
-        //{
-        //    if (observerFactory == null) throw new ArgumentNullException(nameof(observerFactory));
-        //    this.observerFactory = observerFactory;
-        //    return this;
-        //}
-
-        ///// <summary>
-        ///// Sets an existing <see cref="IChangeFeedObserver"/> type to be used by a <see cref="FeedProcessing.IChangeFeedObserverFactory"/> to process changes.
-        ///// </summary>
-        ///// <typeparam name="T">Type of the <see cref="IChangeFeedObserver"/>.</typeparam>
-        ///// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
-        //public ChangeFeedProcessorBuilder WithObserver<T>()
-        //    where T : FeedProcessing.IChangeFeedObserver, new()
-        //{
-        //    this.observerFactory = new ChangeFeedObserverFactory<T>();
-        //    return this;
-        //}
-
-        ///// <summary>
-        ///// Sets the Database Resource Id of the monitored collection.
-        ///// </summary>
-        ///// <param name="databaseResourceId">Database Resource Id.</param>
-        ///// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
-        //public ChangeFeedProcessorBuilder WithDatabaseResourceId(string databaseResourceId)
-        //{
-        //    if (databaseResourceId == null) throw new ArgumentNullException(nameof(databaseResourceId));
-        //    this.databaseResourceId = databaseResourceId;
-        //    return this;
-        //}
-
-        ///// <summary>
-        ///// Sets the Collection Resource Id of the monitored collection.
-        ///// </summary>
-        ///// <param name="collectionResourceId">Collection Resource Id.</param>
-        ///// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
-        //public ChangeFeedProcessorBuilder WithCollectionResourceId(string collectionResourceId)
-        //{
-        //    if (collectionResourceId == null) throw new ArgumentNullException(nameof(collectionResourceId));
-        //    this.collectionResourceId = collectionResourceId;
-        //    return this;
-        //}
 
         /// <summary>
         /// Sets the Cosmos Con
@@ -271,60 +185,36 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
             return this;
         }
 
-        ///// <summary>
-        ///// Sets an existing <see cref="DocumentClient"/> to be used to read from the leases collection.
-        ///// </summary>
-        ///// <param name="leaseDocumentClient">The instance of <see cref="DocumentClient"/> to use.</param>
-        ///// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
-        //public ChangeFeedProcessorBuilder WithLeaseDocumentClient(DocumentClient leaseDocumentClient)
-        //{
-        //    if (leaseDocumentClient == null) throw new ArgumentNullException(nameof(leaseDocumentClient));
-        //    this.leaseCosmosClient = new ChangeFeedDocumentClient(leaseDocumentClient);
-        //    return this;
-        //}
-
-        ///// <summary>
-        ///// Sets an existing <see cref="IChangeFeedDocumentClient"/> to be used to read from the leases collection.
-        ///// </summary>
-        ///// <param name="leaseDocumentClient">The instance of <see cref="IChangeFeedDocumentClient"/> to use.</param>
-        ///// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
-        //public ChangeFeedProcessorBuilder WithLeaseDocumentClient(IChangeFeedDocumentClient leaseDocumentClient)
-        //{
-        //    if (leaseDocumentClient == null) throw new ArgumentNullException(nameof(leaseDocumentClient));
-        //    this.leaseCosmosClient = leaseDocumentClient;
-        //    return this;
-        //}
-
         /// <summary>
-        /// Sets the <see cref="IParitionLoadBalancingStrategy"/> to be used for partition load balancing
+        /// Sets the <see cref="PartitionLoadBalancingStrategy"/> to be used for partition load balancing
         /// </summary>
-        /// <param name="strategy">The instance of <see cref="IParitionLoadBalancingStrategy"/> to use.</param>
+        /// <param name="strategy">The instance of <see cref="PartitionLoadBalancingStrategy"/> to use.</param>
         /// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
-        public ChangeFeedProcessorBuilder WithPartitionLoadBalancingStrategy(IParitionLoadBalancingStrategy strategy)
+        public ChangeFeedProcessorBuilder WithPartitionLoadBalancingStrategy(PartitionLoadBalancingStrategy strategy)
         {
             if (strategy == null) throw new ArgumentNullException(nameof(strategy));
             this.loadBalancingStrategy = strategy;
             return this;
         }
 
-        ///// <summary>
-        ///// Sets the <see cref="IPartitionProcessorFactory"/> to be used to create <see cref="IPartitionProcessor"/> for partition processing.
-        ///// </summary>
-        ///// <param name="partitionProcessorFactory">The instance of <see cref="IPartitionProcessorFactory"/> to use.</param>
-        ///// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
-        //public ChangeFeedProcessorBuilder WithPartitionProcessorFactory(IPartitionProcessorFactory partitionProcessorFactory)
-        //{
-        //    if (partitionProcessorFactory == null) throw new ArgumentNullException(nameof(partitionProcessorFactory));
-        //    this.partitionProcessorFactory = partitionProcessorFactory;
-        //    return this;
-        //}
+        /// <summary>
+        /// Sets the <see cref="PartitionProcessorFactory"/> to be used to create <see cref="PartitionProcessor"/> for partition processing.
+        /// </summary>
+        /// <param name="partitionProcessorFactory">The instance of <see cref="PartitionProcessorFactory"/> to use.</param>
+        /// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
+        public ChangeFeedProcessorBuilder WithPartitionProcessorFactory(PartitionProcessorFactory partitionProcessorFactory)
+        {
+            if (partitionProcessorFactory == null) throw new ArgumentNullException(nameof(partitionProcessorFactory));
+            this.partitionProcessorFactory = partitionProcessorFactory;
+            return this;
+        }
 
         /// <summary>
-        /// Sets the <see cref="ILeaseStoreManager"/> to be used to manage leases.
+        /// Sets the <see cref="DocumentServiceLeaseStoreManager"/> to be used to manage leases.
         /// </summary>
-        /// <param name="leaseStoreManager">The instance of <see cref="ILeaseStoreManager"/> to use.</param>
+        /// <param name="leaseStoreManager">The instance of <see cref="DocumentServiceLeaseStoreManager"/> to use.</param>
         /// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
-        public ChangeFeedProcessorBuilder WithLeaseStoreManager(ILeaseStoreManager leaseStoreManager)
+        public ChangeFeedProcessorBuilder WithLeaseStoreManager(DocumentServiceLeaseStoreManager leaseStoreManager)
         {
             if (leaseStoreManager == null) throw new ArgumentNullException(nameof(leaseStoreManager));
             this.LeaseStoreManager = leaseStoreManager;
@@ -332,11 +222,11 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
         }
 
         /// <summary>
-        /// Sets the <see cref="IHealthMonitor"/> to be used to monitor unhealthiness situation.
+        /// Sets the <see cref="HealthMonitor"/> to be used to monitor unhealthiness situation.
         /// </summary>
-        /// <param name="healthMonitor">The instance of <see cref="IHealthMonitor"/> to use.</param>
+        /// <param name="healthMonitor">The instance of <see cref="HealthMonitor"/> to use.</param>
         /// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
-        public ChangeFeedProcessorBuilder WithHealthMonitor(IHealthMonitor healthMonitor)
+        public ChangeFeedProcessorBuilder WithHealthMonitor(HealthMonitor healthMonitor)
         {
             if (healthMonitor == null) throw new ArgumentNullException(nameof(healthMonitor));
             this.healthMonitor = healthMonitor;
@@ -344,10 +234,10 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
         }
 
         /// <summary>
-        /// Builds a new instance of the <see cref="IChangeFeedProcessor"/> with the specified configuration.
+        /// Builds a new instance of the <see cref="ChangeFeedProcessor"/> with the specified configuration.
         /// </summary>
-        /// <returns>An instance of <see cref="IChangeFeedProcessor"/>.</returns>
-        public async Task<IChangeFeedProcessor> BuildAsync()
+        /// <returns>An instance of <see cref="ChangeFeedProcessor"/>.</returns>
+        public async Task<ChangeFeedProcessor> BuildAsync()
         {
             if (this.HostName == null)
             {
@@ -371,68 +261,52 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
 
             this.InitializeCollectionPropertiesForBuild();
 
-            ILeaseStoreManager leaseStoreManager = await this.GetLeaseStoreManagerAsync(this.leaseContainer, true).ConfigureAwait(false);
-            IPartitionManager partitionManager = this.BuildPartitionManager(leaseStoreManager);
-            return new ChangeFeedProcessor(partitionManager);
+            DocumentServiceLeaseStoreManager leaseStoreManager = await this.GetLeaseStoreManagerAsync(this.leaseContainer, true).ConfigureAwait(false);
+            PartitionManager partitionManager = this.BuildPartitionManager(leaseStoreManager);
+            return new ChangeFeedProcessorCore(partitionManager);
         }
 
         /// <summary>
-        /// Builds a new instance of the <see cref="IRemainingWorkEstimator"/> to estimate pending work with the specified configuration.
+        /// Builds a new instance of the <see cref="RemainingWorkEstimator"/> to estimate pending work with the specified configuration.
         /// </summary>
-        /// <returns>An instance of <see cref="IRemainingWorkEstimator"/>.</returns>
-        //public async Task<IRemainingWorkEstimator> BuildEstimatorAsync()
-        //{
-        //    if (this.feedCollectionLocation == null)
-        //    {
-        //        throw new InvalidOperationException(nameof(this.feedCollectionLocation) + " was not specified");
-        //    }
+        /// <returns>An instance of <see cref="RemainingWorkEstimator"/>.</returns>
+        public async Task<RemainingWorkEstimator> BuildEstimatorAsync()
+        {
+            if (this.monitoredContainer == null)
+            {
+                throw new InvalidOperationException(nameof(this.monitoredContainer) + " was not specified");
+            }
 
-        //    if (this.leaseCollectionLocation == null && this.LeaseStoreManager == null)
-        //    {
-        //        throw new InvalidOperationException($"Either {nameof(this.leaseCollectionLocation)} or {nameof(this.LeaseStoreManager)} must be specified");
-        //    }
+            if (this.leaseContainer == null && this.LeaseStoreManager == null)
+            {
+                throw new InvalidOperationException($"Either {nameof(this.leaseContainer)} or {nameof(this.LeaseStoreManager)} must be specified");
+            }
 
-        //    await this.InitializeCollectionPropertiesForBuildAsync().ConfigureAwait(false);
+            this.InitializeCollectionPropertiesForBuild();
 
-        //    var leaseStoreManager = await this.GetLeaseStoreManagerAsync(this.leaseCollectionLocation, true).ConfigureAwait(false);
+            var leaseStoreManager = await this.GetLeaseStoreManagerAsync(this.leaseContainer, true).ConfigureAwait(false);
 
-        //    IRemainingWorkEstimator remainingWorkEstimator = new RemainingWorkEstimator(
-        //        leaseStoreManager,
-        //        this.feedCosmosClient,
-        //        this.feedCollectionLocation.GetCollectionSelfLink(),
-        //        this.feedCollectionLocation.ConnectionPolicy.MaxConnectionLimit);
-        //    return remainingWorkEstimator;
-        //}
+            RemainingWorkEstimator remainingWorkEstimator = new RemainingWorkEstimatorCore(
+                leaseStoreManager.LeaseContainer,
+                this.monitoredContainer,
+                this.monitoredContainer.Client.Configuration?.MaxConnectionLimit ?? 1);
+            return remainingWorkEstimator;
+        }
 
-        //private static async Task<string> GetDatabaseResourceIdAsync(CosmosClient cosmosClient, DocumentCollectionInfo collectionLocation)
-        //{
-        //    Logger.InfoFormat("Reading database: '{0}'", collectionLocation.DatabaseName);
-        //    Uri databaseUri = UriFactory.CreateDatabaseUri(collectionLocation.DatabaseName);
-        //    var response = await documentClient.ReadDatabaseAsync(databaseUri, null).ConfigureAwait(false);
-        //    return response.Resource.ResourceId;
-        //}
-
-        //private static async Task<string> GetCollectionResourceIdAsync(IChangeFeedDocumentClient documentClient, DocumentCollectionInfo collectionLocation)
-        //{
-        //    Logger.InfoFormat("Reading collection: '{0}'", collectionLocation.CollectionName);
-        //    DocumentCollection documentCollection = await documentClient.GetDocumentCollectionAsync(collectionLocation).ConfigureAwait(false);
-        //    return documentCollection.ResourceId;
-        //}
-
-        private IPartitionManager BuildPartitionManager(ILeaseStoreManager leaseStoreManager)
+        private PartitionManager BuildPartitionManager(DocumentServiceLeaseStoreManager leaseStoreManager)
         {
             var factory = new CheckpointerObserverFactory(this.observerFactory, this.changeFeedProcessorOptions.CheckpointFrequency);
-            var synchronizer = new PartitionSynchronizer(
+            var synchronizer = new PartitionSynchronizerCore(
                 this.monitoredContainer,
-                leaseStoreManager,
-                leaseStoreManager,
+                leaseStoreManager.LeaseContainer,
+                leaseStoreManager.LeaseManager,
                 this.changeFeedProcessorOptions.DegreeOfParallelism,
                 this.changeFeedProcessorOptions.QueryPartitionsMaxBatchSize);
-            var bootstrapper = new Bootstrapper(synchronizer, leaseStoreManager, this.lockTime, this.sleepTime);
-            var partitionSuperviserFactory = new PartitionSupervisorFactory(
+            var bootstrapper = new BootstrapperCore(synchronizer, leaseStoreManager.LeaseStore, this.lockTime, this.sleepTime);
+            var partitionSuperviserFactory = new PartitionSupervisorFactoryCore(
                 factory,
-                leaseStoreManager,
-                this.partitionProcessorFactory ?? new PartitionProcessorFactory(this.monitoredContainer, this.changeFeedProcessorOptions, leaseStoreManager),
+                leaseStoreManager.LeaseManager,
+                this.partitionProcessorFactory ?? new PartitionProcessorFactoryCore(this.monitoredContainer, this.changeFeedProcessorOptions, leaseStoreManager.LeaseCheckpointer),
                 this.changeFeedProcessorOptions);
 
             if (this.loadBalancingStrategy == null)
@@ -444,7 +318,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
                     this.changeFeedProcessorOptions.LeaseExpirationInterval);
             }
 
-            IPartitionController partitionController = new PartitionController(leaseStoreManager, leaseStoreManager, partitionSuperviserFactory, synchronizer);
+            PartitionController partitionController = new PartitionControllerCore(leaseStoreManager.LeaseContainer, leaseStoreManager.LeaseManager, partitionSuperviserFactory, synchronizer);
 
             if (this.healthMonitor == null)
             {
@@ -452,15 +326,15 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
             }
 
             partitionController = new HealthMonitoringPartitionControllerDecorator(partitionController, this.healthMonitor);
-            var partitionLoadBalancer = new PartitionLoadBalancer(
+            var partitionLoadBalancer = new PartitionLoadBalancerCore(
                 partitionController,
-                leaseStoreManager,
+                leaseStoreManager.LeaseContainer,
                 this.loadBalancingStrategy,
                 this.changeFeedProcessorOptions.LeaseAcquireInterval);
-            return new PartitionManager(bootstrapper, partitionController, partitionLoadBalancer);
+            return new PartitionManagerCore(bootstrapper, partitionController, partitionLoadBalancer);
         }
 
-        private async Task<ILeaseStoreManager> GetLeaseStoreManagerAsync(
+        private async Task<DocumentServiceLeaseStoreManager> GetLeaseStoreManagerAsync(
             CosmosContainer leaseContainer,
             bool isPartitionKeyByIdRequiredIfPartitioned)
         {
@@ -480,8 +354,8 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
                 }
 
                 var requestOptionsFactory = isPartitioned ?
-                    (IRequestOptionsFactory)new PartitionedByIdCollectionRequestOptionsFactory() :
-                    (IRequestOptionsFactory)new SinglePartitionRequestOptionsFactory();
+                    (RequestOptionsFactory)new PartitionedByIdCollectionRequestOptionsFactory() :
+                    (RequestOptionsFactory)new SinglePartitionRequestOptionsFactory();
 
                 string leasePrefix = this.GetLeasePrefix();
                 var leaseStoreManagerBuilder = new DocumentServiceLeaseStoreManagerBuilder()

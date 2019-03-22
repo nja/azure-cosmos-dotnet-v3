@@ -4,16 +4,15 @@
 
 namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
 {
-    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
     using Microsoft.Azure.Cosmos;
 
     /// <summary>
     /// Used to create request options for non-partitioned lease collections.
     /// </summary>
-    internal class SinglePartitionRequestOptionsFactory : IRequestOptionsFactory
+    internal sealed class SinglePartitionRequestOptionsFactory : RequestOptionsFactory
     {
-        public FeedOptions CreateFeedOptions() => null;
+        public override FeedOptions CreateFeedOptions() => null;
 
-        public string GetPartitionKey(string itemId) => null;
+        public override string GetPartitionKey(string itemId) => null;
     }
 }

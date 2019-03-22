@@ -7,7 +7,6 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
     using System;
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos;
-    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Utils;
 
     /// <summary>
     /// Provides flexible way to build lease manager constructor parameters.
@@ -17,7 +16,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
     {
         private DocumentServiceLeaseStoreManagerSettings settings = new DocumentServiceLeaseStoreManagerSettings();
         private CosmosContainer container;
-        private IRequestOptionsFactory requestOptionsFactory;
+        private RequestOptionsFactory requestOptionsFactory;
 
         public DocumentServiceLeaseStoreManagerBuilder WithLeaseContainer(CosmosContainer leaseContainer)
         {
@@ -35,7 +34,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
             return this;
         }
 
-        public DocumentServiceLeaseStoreManagerBuilder WithRequestOptionsFactory(IRequestOptionsFactory requestOptionsFactory)
+        public DocumentServiceLeaseStoreManagerBuilder WithRequestOptionsFactory(RequestOptionsFactory requestOptionsFactory)
         {
             if (requestOptionsFactory == null) throw new ArgumentNullException(nameof(requestOptionsFactory));
 
@@ -51,15 +50,15 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
             return this;
         }
 
-        public Task<ILeaseStoreManager> BuildAsync()
+        public Task<DocumentServiceLeaseStoreManager> BuildAsync()
         {
             if (this.container == null)
                 throw new InvalidOperationException(nameof(this.container) + " was not specified");
             if (this.requestOptionsFactory == null)
                 throw new InvalidOperationException(nameof(this.requestOptionsFactory) + " was not specified");
 
-            var leaseStoreManager = new DocumentServiceLeaseStoreManager(this.settings, this.container, this.requestOptionsFactory);
-            return Task.FromResult<ILeaseStoreManager>(leaseStoreManager);
+            var leaseStoreManager = new DocumentServiceLeaseStoreManagerCore(this.settings, this.container, this.requestOptionsFactory);
+            return Task.FromResult<DocumentServiceLeaseStoreManager>(leaseStoreManager);
         }
     }
 }

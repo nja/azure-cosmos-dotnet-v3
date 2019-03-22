@@ -11,12 +11,12 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.DocDBErrors
     {
         public static DocDbError ClassifyClientException(DocumentClientException clientException)
         {
-            SubStatusCode subStatusCode = clientException.GetSubStatusCode();
+            SubStatusCodes subStatusCode = clientException.GetSubStatusCode();
 
-            if (clientException.StatusCode == HttpStatusCode.NotFound && subStatusCode != SubStatusCode.ReadSessionNotAvailable)
+            if (clientException.StatusCode == HttpStatusCode.NotFound && subStatusCode != SubStatusCodes.ReadSessionNotAvailable)
                 return DocDbError.PartitionNotFound;
 
-            if (clientException.StatusCode == HttpStatusCode.Gone && (subStatusCode == SubStatusCode.PartitionKeyRangeGone || subStatusCode == SubStatusCode.Splitting))
+            if (clientException.StatusCode == HttpStatusCode.Gone && (subStatusCode == SubStatusCodes.PartitionKeyRangeGone || subStatusCode == SubStatusCodes.CompletingSplit))
                 return DocDbError.PartitionSplit;
 
             if (clientException.StatusCode == (HttpStatusCode)429 || clientException.StatusCode >= HttpStatusCode.InternalServerError)

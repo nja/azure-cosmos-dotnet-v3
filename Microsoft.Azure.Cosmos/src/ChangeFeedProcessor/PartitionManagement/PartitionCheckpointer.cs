@@ -6,10 +6,12 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
 {
     using System.Threading.Tasks;
 
-    internal interface IPartitionManager
+    internal abstract class PartitionCheckpointer
     {
-        Task StartAsync();
-
-        Task StopAsync();
+        /// <summary>
+        /// Checkpoint the given partition up to the given continuation token.
+        /// </summary>
+        /// <param name="сontinuationToken">Continuation token</param>
+        public abstract Task CheckpointPartitionAsync(string сontinuationToken);
     }
 }

@@ -5,17 +5,18 @@
 namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
 {
     using System.Collections.Generic;
+    using Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement;
 
     /// <summary>
     /// A strategy defines which leases should be taken by the current host in a certain moment.
     /// </summary>
     /// <remarks>
-    /// It can set new <see cref="ILease.Properties"/> for all returned leases if needed, including currently owned leases.
+    /// It can set new <see cref="DocumentServiceLease.Properties"/> for all returned leases if needed, including currently owned leases.
     /// </remarks>
     /// <example>
     /// <code language="C#">
     /// <![CDATA[
-    /// public class CustomStrategy : IParitionLoadBalancingStrategy
+    /// public class CustomStrategy : PartitionLoadBalancingStrategy
     /// {
     ///     private string hostName;
     ///     private string hostVersion;
@@ -67,7 +68,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
     /// ]]>
     /// </code>
     /// </example>
-    public interface IParitionLoadBalancingStrategy
+    public abstract class PartitionLoadBalancingStrategy
     {
         /// <summary>
         /// Select leases that should be taken for processing.
@@ -75,6 +76,6 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
         /// </summary>
         /// <param name="allLeases">All leases</param>
         /// <returns>Leases that should be taken for processing by this host</returns>
-        IEnumerable<ILease> SelectLeasesToTake(IEnumerable<ILease> allLeases);
+        public abstract IEnumerable<DocumentServiceLease> SelectLeasesToTake(IEnumerable<DocumentServiceLease> allLeases);
     }
 }
