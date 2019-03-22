@@ -42,7 +42,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
         [JsonProperty("PartitionId")]
         public string DistributionUnit { get; set; }
 
-        public override string PartitionId => this.DistributionUnit;
+        public override string ProcessingDistributionUnit => this.DistributionUnit;
 
         [JsonProperty("Owner")]
         public override string Owner { get; set; }

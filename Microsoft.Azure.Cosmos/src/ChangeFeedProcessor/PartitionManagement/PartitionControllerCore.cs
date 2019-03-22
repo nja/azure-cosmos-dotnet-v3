@@ -48,10 +48,10 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
         {
             var tcs = new TaskCompletionSource<bool>();
 
-            if (!this.currentlyOwnedPartitions.TryAdd(lease.PartitionId, tcs))
+            if (!this.currentlyOwnedPartitions.TryAdd(lease.ProcessingDistributionUnit, tcs))
             {
                 await this.leaseManager.UpdatePropertiesAsync(lease).ConfigureAwait(false);
-                Logger.DebugFormat("partition {0}: updated", lease.PartitionId);
+                Logger.DebugFormat("partition {0}: updated", lease.ProcessingDistributionUnit);
                 return;
             }
 
@@ -59,7 +59,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
             {
                 var updatedLease = await this.leaseManager.AcquireAsync(lease).ConfigureAwait(false);
                 if (updatedLease != null) lease = updatedLease;
-                Logger.InfoFormat("partition {0}: acquired", lease.PartitionId);
+                Logger.InfoFormat("partition {0}: acquired", lease.ProcessingDistributionUnit);
             }
             catch (Exception)
             {
@@ -84,7 +84,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
             var addLeaseTasks = new List<Task>();
             foreach (DocumentServiceLease lease in await this.leaseContainer.GetOwnedLeasesAsync().ConfigureAwait(false))
             {
-                Logger.InfoFormat("Acquired lease for PartitionId '{0}' on startup.", lease.PartitionId);
+                Logger.InfoFormat("Acquired lease for PartitionId '{0}' on startup.", lease.ProcessingDistributionUnit);
                 addLeaseTasks.Add(this.AddOrUpdateLeaseAsync(lease));
             }
 
@@ -94,12 +94,12 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
         private async Task RemoveLeaseAsync(DocumentServiceLease lease)
         {
             TaskCompletionSource<bool> worker;
-            if (!this.currentlyOwnedPartitions.TryRemove(lease.PartitionId, out worker))
+            if (!this.currentlyOwnedPartitions.TryRemove(lease.ProcessingDistributionUnit, out worker))
             {
                 return;
             }
 
-            Logger.InfoFormat("partition {0}: released", lease.PartitionId);
+            Logger.InfoFormat("partition {0}: released", lease.ProcessingDistributionUnit);
 
             try
             {
@@ -107,7 +107,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
             }
             catch (Exception e)
             {
-                Logger.WarnException("partition {0}: failed to remove lease", e, lease.PartitionId);
+                Logger.WarnException("partition {0}: failed to remove lease", e, lease.ProcessingDistributionUnit);
             }
             finally
             {
@@ -127,11 +127,11 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
             }
             catch (TaskCanceledException)
             {
-                Logger.DebugFormat("partition {0}: processing canceled", lease.PartitionId);
+                Logger.DebugFormat("partition {0}: processing canceled", lease.ProcessingDistributionUnit);
             }
             catch (Exception e)
             {
-                Logger.WarnException("partition {0}: processing failed", e, lease.PartitionId);
+                Logger.WarnException("partition {0}: processing failed", e, lease.ProcessingDistributionUnit);
             }
 
             await this.RemoveLeaseAsync(lease).ConfigureAwait(false);
@@ -154,7 +154,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
             }
             catch (Exception e)
             {
-                Logger.WarnException("partition {0}: failed to split", e, lease.PartitionId);
+                Logger.WarnException("partition {0}: failed to split", e, lease.ProcessingDistributionUnit);
             }
         }
     }

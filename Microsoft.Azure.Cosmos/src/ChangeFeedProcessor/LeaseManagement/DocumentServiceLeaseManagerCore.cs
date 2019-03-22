@@ -41,7 +41,7 @@
                 {
                     if (serverLease.Owner != oldOwner)
                     {
-                        Logger.InfoFormat("Partition {0} lease was taken over by owner '{1}'", lease.PartitionId, serverLease.Owner);
+                        Logger.InfoFormat("Partition {0} lease was taken over by owner '{1}'", lease.ProcessingDistributionUnit, serverLease.Owner);
                         throw new LeaseLostException(lease);
                     }
                     serverLease.Owner = this.settings.HostName;
@@ -84,7 +84,7 @@
             DocumentServiceLeaseCore refreshedLease = await this.TryGetLeaseAsync(lease).ConfigureAwait(false);
             if (refreshedLease == null)
             {
-                Logger.InfoFormat("Partition {0} failed to release lease. The lease is gone already.", lease.PartitionId);
+                Logger.InfoFormat("Partition {0} failed to release lease. The lease is gone already.", lease.ProcessingDistributionUnit);
                 throw new LeaseLostException(lease);
             }
 
@@ -96,7 +96,7 @@
                 {
                     if (serverLease.Owner != lease.Owner)
                     {
-                        Logger.InfoFormat("Partition {0} no need to release lease. The lease was already taken by another host '{1}'.", lease.PartitionId, serverLease.Owner);
+                        Logger.InfoFormat("Partition {0} no need to release lease. The lease was already taken by another host '{1}'.", lease.ProcessingDistributionUnit, serverLease.Owner);
                         throw new LeaseLostException(lease);
                     }
                     serverLease.Owner = null;
@@ -126,7 +126,7 @@
             DocumentServiceLeaseCore refreshedLease = await this.TryGetLeaseAsync(lease).ConfigureAwait(false);
             if (refreshedLease == null)
             {
-                Logger.InfoFormat("Partition {0} failed to renew lease. The lease is gone already.", lease.PartitionId);
+                Logger.InfoFormat("Partition {0} failed to renew lease. The lease is gone already.", lease.ProcessingDistributionUnit);
                 throw new LeaseLostException(lease);
             }
 
@@ -138,7 +138,7 @@
                 {
                     if (serverLease.Owner != lease.Owner)
                     {
-                        Logger.InfoFormat("Partition {0} lease was taken over by owner '{1}'", lease.PartitionId, serverLease.Owner);
+                        Logger.InfoFormat("Partition {0} lease was taken over by owner '{1}'", lease.ProcessingDistributionUnit, serverLease.Owner);
                         throw new LeaseLostException(lease);
                     }
                     return serverLease;
@@ -151,7 +151,7 @@
 
             if (lease.Owner != this.settings.HostName)
             {
-                Logger.InfoFormat("Partition '{0}' lease was taken over by owner '{1}' before lease properties update", lease.PartitionId, lease.Owner);
+                Logger.InfoFormat("Partition '{0}' lease was taken over by owner '{1}' before lease properties update", lease.ProcessingDistributionUnit, lease.Owner);
                 throw new LeaseLostException(lease);
             }
 
@@ -163,7 +163,7 @@
                 {
                     if (serverLease.Owner != lease.Owner)
                     {
-                        Logger.InfoFormat("Partition '{0}' lease was taken over by owner '{1}'", lease.PartitionId, serverLease.Owner);
+                        Logger.InfoFormat("Partition '{0}' lease was taken over by owner '{1}'", lease.ProcessingDistributionUnit, serverLease.Owner);
                         throw new LeaseLostException(lease);
                     }
                     serverLease.Properties = lease.Properties;

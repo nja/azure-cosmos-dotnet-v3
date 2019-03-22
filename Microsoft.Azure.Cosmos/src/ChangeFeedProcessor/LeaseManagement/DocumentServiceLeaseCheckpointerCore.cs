@@ -43,7 +43,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
                 {
                     if (serverLease.Owner != lease.Owner)
                     {
-                        Logger.InfoFormat("Partition {0} lease was taken over by owner '{1}'", lease.PartitionId, serverLease.Owner);
+                        Logger.InfoFormat("Partition {0} lease was taken over by owner '{1}'", lease.ProcessingDistributionUnit, serverLease.Owner);
                         throw new LeaseLostException(lease);
                     }
                     serverLease.ContinuationToken = continuationToken;

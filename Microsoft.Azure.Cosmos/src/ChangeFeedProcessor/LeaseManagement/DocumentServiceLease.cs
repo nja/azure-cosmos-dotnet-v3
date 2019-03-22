@@ -20,7 +20,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
         /// <summary>
         /// Gets the processing distribution unit identifier.
         /// </summary>
-        public abstract string PartitionId { get; }
+        public abstract string ProcessingDistributionUnit { get; }
 
         /// <summary>
         /// Gets or sets the host name owner of the lease.

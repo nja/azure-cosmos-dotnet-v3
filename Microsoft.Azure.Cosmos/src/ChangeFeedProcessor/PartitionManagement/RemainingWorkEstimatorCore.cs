@@ -68,13 +68,13 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
                             DocumentServiceLease item = partition.Current;
                             try
                             {
-                                if (string.IsNullOrEmpty(item?.PartitionId)) continue;
+                                if (string.IsNullOrEmpty(item?.ProcessingDistributionUnit)) continue;
                                 var result = await this.GetRemainingWorkAsync(item);
-                                partialResults.Add(new RemainingPartitionWork(item.PartitionId, result));
+                                partialResults.Add(new RemainingPartitionWork(item.ProcessingDistributionUnit, result));
                             }
                             catch (DocumentClientException ex)
                             {
-                                Logger.WarnException($"Getting estimated work for {item.PartitionId} failed!", ex);
+                                Logger.WarnException($"Getting estimated work for {item.ProcessingDistributionUnit} failed!", ex);
                             }
                         }
                     }
@@ -143,7 +143,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
             ChangeFeedOptions options = new ChangeFeedOptions
             {
                 MaxItemCount = 1,
-                PartitionKeyRangeId = existingLease.PartitionId,
+                PartitionKeyRangeId = existingLease.ProcessingDistributionUnit,
                 RequestContinuation = existingLease.ContinuationToken,
                 StartFromBeginning = string.IsNullOrEmpty(existingLease.ContinuationToken),
             };
@@ -167,7 +167,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
             }
             catch (Exception clientException)
             {
-                Logger.WarnException($"GetEstimateWork > exception: partition '{existingLease.PartitionId}'", clientException);
+                Logger.WarnException($"GetEstimateWork > exception: partition '{existingLease.ProcessingDistributionUnit}'", clientException);
                 throw;
             }
         }

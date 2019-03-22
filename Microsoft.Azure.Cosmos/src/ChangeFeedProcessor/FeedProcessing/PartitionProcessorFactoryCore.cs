@@ -39,7 +39,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
                 StartContinuation = !string.IsNullOrEmpty(lease.ContinuationToken) ?
                     lease.ContinuationToken :
                     this.changeFeedProcessorOptions.StartContinuation,
-                PartitionKeyRangeId = lease.PartitionId,
+                PartitionKeyRangeId = lease.ProcessingDistributionUnit,
                 FeedPollDelay = this.changeFeedProcessorOptions.FeedPollDelay,
                 MaxItemCount = this.changeFeedProcessorOptions.MaxItemCount,
                 StartFromBeginning = this.changeFeedProcessorOptions.StartFromBeginning,
