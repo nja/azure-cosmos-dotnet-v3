@@ -39,6 +39,10 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
 
                 lease.Timestamp = DateTime.UtcNow;
                 DocumentServiceLease leaseDocument = await this.TryReplaceLeaseAsync((DocumentServiceLease)lease, partitionKey, itemId).ConfigureAwait(false);
+                if (leaseDocument != null)
+                {
+                    return leaseDocument;
+                }
 
                 Logger.InfoFormat("Partition {0} lease update conflict. Reading the current version of lease.", lease.PartitionId);
                 DocumentServiceLease serverLease;
@@ -77,10 +81,6 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
                     itemId, 
                     lease, 
                     this.CreateIfMatchOptions(lease)).ConfigureAwait(false);
-                if (response.StatusCode == HttpStatusCode.PreconditionFailed)
-                {
-                    return null;
-                }
 
                 if (response.StatusCode == HttpStatusCode.Conflict ||
                     response.StatusCode == HttpStatusCode.NotFound)
@@ -93,6 +93,11 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
             catch (CosmosException ex)
             {
                 Logger.WarnFormat("Lease operation exception, status code: ", ex.StatusCode);
+                if (ex.StatusCode == HttpStatusCode.PreconditionFailed)
+                {
+                    return null;
+                }
+
                 if (ex.StatusCode == HttpStatusCode.Conflict ||
                     ex.StatusCode == HttpStatusCode.NotFound)
                 {

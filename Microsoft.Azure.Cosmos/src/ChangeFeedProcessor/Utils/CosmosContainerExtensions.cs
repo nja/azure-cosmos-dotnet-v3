@@ -34,7 +34,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Utils
             }
         }
 
-        public static async Task<T> TryCreateItemAsync<T>(
+        public static async Task<CosmosItemResponse<T>> TryCreateItemAsync<T>(
             this CosmosContainer container, 
             object partitionKey, 
             T item)
@@ -43,10 +43,10 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.Utils
             if (response.StatusCode == HttpStatusCode.Conflict)
             {
                 // Ignore-- document already exists.
-                return default(T);
+                return null;
             }
 
-            return response.Resource;
+            return response;
         }
 
         public static async Task<T> TryDeleteItemAsync<T>(
