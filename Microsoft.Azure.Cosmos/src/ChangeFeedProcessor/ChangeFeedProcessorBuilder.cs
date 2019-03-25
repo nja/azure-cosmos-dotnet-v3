@@ -301,7 +301,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
                 leaseStoreManager.LeaseContainer,
                 leaseStoreManager.LeaseManager,
                 this.changeFeedProcessorOptions.DegreeOfParallelism,
-                this.changeFeedProcessorOptions.QueryPartitionsMaxBatchSize);
+                this.changeFeedProcessorOptions.QueryFeedMaxBatchSize);
             var bootstrapper = new BootstrapperCore(synchronizer, leaseStoreManager.LeaseStore, this.lockTime, this.sleepTime);
             var partitionSuperviserFactory = new PartitionSupervisorFactoryCore<T>(
                 factory,
@@ -313,8 +313,8 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
             {
                 this.loadBalancingStrategy = new EqualPartitionsBalancingStrategy(
                     this.HostName,
-                    this.changeFeedProcessorOptions.MinPartitionCount,
-                    this.changeFeedProcessorOptions.MaxPartitionCount,
+                    this.changeFeedProcessorOptions.MinLeaseCount,
+                    this.changeFeedProcessorOptions.MaxLeaseCount,
                     this.changeFeedProcessorOptions.LeaseExpirationInterval);
             }
 

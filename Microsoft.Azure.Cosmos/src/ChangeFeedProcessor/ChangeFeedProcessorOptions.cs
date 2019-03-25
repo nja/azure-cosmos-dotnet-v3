@@ -26,28 +26,31 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
             this.LeaseAcquireInterval = DefaultAcquireInterval;
             this.LeaseExpirationInterval = DefaultExpirationInterval;
             this.FeedPollDelay = DefaultFeedPollDelay;
-            this.QueryPartitionsMaxBatchSize = DefaultQueryPartitionsMaxBatchSize;
+            this.QueryFeedMaxBatchSize = DefaultQueryPartitionsMaxBatchSize;
             this.CheckpointFrequency = new CheckpointFrequency();
         }
 
         /// <summary>
-        /// Gets or sets renew interval for all leases for partitions currently held by <see cref="ChangeFeedProcessorCore"/> instance.
+        /// Gets or sets renew interval for all leases currently held by <see cref="ChangeFeedProcessorCore"/> instance.
         /// </summary>
         public TimeSpan LeaseRenewInterval { get; set; }
 
         /// <summary>
-        /// Gets or sets the interval to kick off a task to compute if partitions are distributed evenly among known host instances.
+        /// Gets or sets the interval to kick off a task to compute if leases are distributed evenly among known host instances.
         /// </summary>
         public TimeSpan LeaseAcquireInterval { get; set; }
 
         /// <summary>
-        /// Gets or sets the interval for which the lease is taken on a lease representing a partition. If the lease is not renewed within this
-        /// interval, it will cause it to expire and ownership of the partition will move to another <see cref="ChangeFeedProcessorCore"/> instance.
+        /// Gets or sets the interval for which the lease is taken. If the lease is not renewed within this
+        /// interval, it will cause it to expire and ownership of the lease will move to another <see cref="ChangeFeedProcessorCore"/> instance.
         /// </summary>
         public TimeSpan LeaseExpirationInterval { get; set; }
 
         /// <summary>
-        /// Gets or sets the delay in between polling a partition for new changes on the feed, after all current changes are drained.
+        /// Gets or sets the delay in between polling the change feed for new changes, after all current changes are drained.
+        /// <remarks>
+        /// Applies only after a read on the change feed yielded no results.
+        /// </remarks>
         /// </summary>
         public TimeSpan FeedPollDelay { get; set; }
 
@@ -71,7 +74,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
         /// Gets or sets the start request continuation token to start looking for changes after.
         /// </summary>
         /// <remarks>
-        /// This is only used when lease store is not initialized and is ignored if a lease for partition exists and has continuation token.
+        /// This is only used when lease store is not initialized and is ignored if a lease exists and has continuation token.
         /// If this is specified, both StartTime and StartFromBeginning are ignored.
         /// </remarks>
         /// <seealso cref="ChangeFeedOptions.RequestContinuation"/>
@@ -82,7 +85,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
         /// </summary>
         /// <remarks>
         /// This is only used when:
-        /// (1) Lease store is not initialized and is ignored if a lease for partition exists and has continuation token.
+        /// (1) Lease store is not initialized and is ignored if a lease exists and has continuation token.
         /// (2) StartContinuation is not specified.
         /// If this is specified, StartFromBeginning is ignored.
         /// </remarks>
@@ -108,7 +111,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
         /// </summary>
         /// <remarks>
         /// This is only used when:
-        /// (1) Lease store is not initialized and is ignored if a lease for partition exists and has continuation token.
+        /// (1) Lease store is not initialized and is ignored if a lease exists and has continuation token.
         /// (2) StartContinuation is not specified.
         /// (3) StartTime is not specified.
         /// </remarks>
@@ -121,17 +124,17 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
         public string SessionToken { get; set; }
 
         /// <summary>
-        /// Gets or sets the minimum partition count for the host.
-        /// This can be used to increase the number of partitions for the host and thus override equal distribution (which is the default) of leases between hosts.
+        /// Gets or sets the minimum leases count for the host.
+        /// This can be used to increase the number of leases for the host and thus override equal distribution (which is the default) of leases between hosts.
         /// </summary>
-        internal int MinPartitionCount { get; set; }
+        internal int MinLeaseCount { get; set; }
 
         /// <summary>
-        /// Gets or sets the maximum number of partitions the host can serve.
-        /// This can be used property to limit the number of partitions for the host and thus override equal distribution (which is the default) of leases between hosts.
+        /// Gets or sets the maximum number of leases the host can serve.
+        /// This can be used property to limit the number of leases for the host and thus override equal distribution (which is the default) of leases between hosts.
         /// Default is 0 (unlimited).
         /// </summary>
-        internal int MaxPartitionCount { get; set; }
+        internal int MaxLeaseCount { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether on start of the host all existing leases should be deleted and the host should start from scratch.
@@ -139,13 +142,13 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
         internal bool DiscardExistingLeases { get; set; }
 
         /// <summary>
-        /// Gets or sets the Batch size of query partitions API.
+        /// Gets or sets the Batch size of query API.
         /// </summary>
-        internal int QueryPartitionsMaxBatchSize { get; set; }
+        internal int QueryFeedMaxBatchSize { get; set; }
 
         /// <summary>
         /// Gets maximum number of tasks to use for auxiliary calls.
         /// </summary>
-        internal int DegreeOfParallelism => this.MaxPartitionCount > 0 ? this.MaxPartitionCount : 25;
+        internal int DegreeOfParallelism => this.MaxLeaseCount > 0 ? this.MaxLeaseCount : 25;
     }
 }
