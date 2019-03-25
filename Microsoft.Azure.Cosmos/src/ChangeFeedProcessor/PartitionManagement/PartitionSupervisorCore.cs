@@ -12,16 +12,16 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement;
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Utils;
 
-    internal sealed class PartitionSupervisorCore : PartitionSupervisor
+    internal sealed class PartitionSupervisorCore<T> : PartitionSupervisor
     {
         private readonly DocumentServiceLease lease;
-        private readonly ChangeFeedObserver observer;
+        private readonly ChangeFeedObserver<T> observer;
         private readonly PartitionProcessor processor;
         private readonly LeaseRenewer renewer;
         private readonly CancellationTokenSource renewerCancellation = new CancellationTokenSource();
         private CancellationTokenSource processorCancellation;
 
-        public PartitionSupervisorCore(DocumentServiceLease lease, ChangeFeedObserver observer, PartitionProcessor processor, LeaseRenewer renewer)
+        public PartitionSupervisorCore(DocumentServiceLease lease, ChangeFeedObserver<T> observer, PartitionProcessor processor, LeaseRenewer renewer)
         {
             this.lease = lease;
             this.observer = observer;
@@ -31,7 +31,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
 
         public override async Task RunAsync(CancellationToken shutdownToken)
         {
-            var context = new ChangeFeedObserverContextCore(this.lease.CurrentLeaseToken);
+            var context = new ChangeFeedObserverContextCore<T>(this.lease.CurrentLeaseToken);
             await this.observer.OpenAsync(context).ConfigureAwait(false);
 
             this.processorCancellation = CancellationTokenSource.CreateLinkedTokenSource(shutdownToken);

@@ -7,12 +7,11 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos;
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
-    using Microsoft.Azure.Cosmos.Internal;
 
     /// <summary>
-    /// The context passed to <see cref="ChangeFeedObserver"/> events.
+    /// The context passed to <see cref="ChangeFeedObserver{T}"/> events.
     /// </summary>
-    internal sealed class ChangeFeedObserverContextCore : ChangeFeedObserverContext
+    internal sealed class ChangeFeedObserverContextCore<T> : ChangeFeedObserverContext
     {
         private readonly PartitionCheckpointer checkpointer;
 
@@ -21,7 +20,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
             this.PartitionKeyRangeId = partitionId;
         }
 
-        internal ChangeFeedObserverContextCore(string partitionId, IFeedResponse<Document> feedResponse, PartitionCheckpointer checkpointer)
+        internal ChangeFeedObserverContextCore(string partitionId, IFeedResponse<T> feedResponse, PartitionCheckpointer checkpointer)
         {
             this.PartitionKeyRangeId = partitionId;
             this.FeedResponse = feedResponse;
@@ -30,7 +29,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
 
         public override string PartitionKeyRangeId { get; }
 
-        public IFeedResponse<Document> FeedResponse { get; }
+        public IFeedResponse<T> FeedResponse { get; }
 
         /// <summary>
         /// Checkpoints progress of a stream. This method is valid only if manual checkpoint was configured.

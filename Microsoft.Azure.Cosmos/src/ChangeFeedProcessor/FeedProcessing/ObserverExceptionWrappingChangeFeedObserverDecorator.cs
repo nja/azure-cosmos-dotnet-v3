@@ -11,12 +11,12 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Exceptions;
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Logging;
 
-    internal sealed class ObserverExceptionWrappingChangeFeedObserverDecorator : ChangeFeedObserver
+    internal sealed class ObserverExceptionWrappingChangeFeedObserverDecorator<T>: ChangeFeedObserver<T>
     {
         private static readonly ILog Logger = LogProvider.GetCurrentClassLogger();
-        private ChangeFeedObserver changeFeedObserver;
+        private ChangeFeedObserver<T> changeFeedObserver;
 
-        public ObserverExceptionWrappingChangeFeedObserverDecorator(ChangeFeedObserver changeFeedObserver)
+        public ObserverExceptionWrappingChangeFeedObserverDecorator(ChangeFeedObserver<T> changeFeedObserver)
         {
             this.changeFeedObserver = changeFeedObserver;
         }
@@ -47,7 +47,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
             }
         }
 
-        public override async Task ProcessChangesAsync(ChangeFeedObserverContext context, IReadOnlyList<dynamic> docs, CancellationToken cancellationToken)
+        public override async Task ProcessChangesAsync(ChangeFeedObserverContext context, IReadOnlyList<T> docs, CancellationToken cancellationToken)
         {
             try
             {

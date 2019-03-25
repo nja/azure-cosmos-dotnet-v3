@@ -106,18 +106,18 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
     /// ]]>
     /// </code>
     /// </example>
-    public class ChangeFeedProcessorBuilder
+    public class ChangeFeedProcessorBuilder<T>
     {
         private static readonly ILog Logger = LogProvider.GetCurrentClassLogger();
         private static readonly long DefaultUnhealthinessDuration = TimeSpan.FromMinutes(15).Ticks;
         private readonly TimeSpan sleepTime = TimeSpan.FromSeconds(15);
         private readonly TimeSpan lockTime = TimeSpan.FromSeconds(30);
         private ChangeFeedProcessorOptions changeFeedProcessorOptions;
-        private ChangeFeedObserverFactory observerFactory = null;
+        private ChangeFeedObserverFactory<T> observerFactory = null;
         private string databaseResourceId;
         private string collectionResourceId;
         private PartitionLoadBalancingStrategy loadBalancingStrategy;
-        private PartitionProcessorFactory partitionProcessorFactory = null;
+        private PartitionProcessorFactory<T> partitionProcessorFactory = null;
         private HealthMonitor healthMonitor;
         private CosmosContainer monitoredContainer;
         private CosmosContainer leaseContainer;
@@ -144,18 +144,18 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
             this.monitoredContainer = cosmosContainer;
         }
 
-        internal ChangeFeedProcessorBuilder(CosmosContainer cosmosContainer, Func<IReadOnlyList<dynamic>, CancellationToken, Task> onChanges)
+        internal ChangeFeedProcessorBuilder(CosmosContainer cosmosContainer, Func<IReadOnlyList<T>, CancellationToken, Task> onChanges)
             : this(cosmosContainer)
         {
-            this.observerFactory = new ChangeFeedObserverFactoryCore(onChanges);
+            this.observerFactory = new ChangeFeedObserverFactoryCore<T>(onChanges);
         }
 
         /// <summary>
         /// Sets the Host name.
         /// </summary>
         /// <param name="hostName">Name to be used for the host. When using multiple hosts, each host must have a unique name.</param>
-        /// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
-        public ChangeFeedProcessorBuilder WithHostName(string hostName)
+        /// <returns>The instance of <see cref="ChangeFeedProcessorBuilder{T}"/> to use.</returns>
+        public ChangeFeedProcessorBuilder<T> WithHostName(string hostName)
         {
             this.HostName = hostName;
             return this;
@@ -165,8 +165,8 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
         /// Sets the <see cref="ChangeFeedProcessorOptions"/> to be used by this instance of <see cref="ChangeFeedProcessor"/>.
         /// </summary>
         /// <param name="changeFeedProcessorOptions">The instance of <see cref="ChangeFeedProcessorOptions"/> to use.</param>
-        /// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
-        public ChangeFeedProcessorBuilder WithProcessorOptions(ChangeFeedProcessorOptions changeFeedProcessorOptions)
+        /// <returns>The instance of <see cref="ChangeFeedProcessorBuilder{T}"/> to use.</returns>
+        public ChangeFeedProcessorBuilder<T> WithProcessorOptions(ChangeFeedProcessorOptions changeFeedProcessorOptions)
         {
             if (changeFeedProcessorOptions == null) throw new ArgumentNullException(nameof(changeFeedProcessorOptions));
             this.changeFeedProcessorOptions = changeFeedProcessorOptions;
@@ -178,7 +178,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
         /// </summary>
         /// <param name="leaseContainer"></param>
         /// <returns></returns>
-        public ChangeFeedProcessorBuilder WithLeaseContainer(CosmosContainer leaseContainer)
+        public ChangeFeedProcessorBuilder<T> WithLeaseContainer(CosmosContainer leaseContainer)
         {
             if (leaseContainer == null) throw new ArgumentNullException(nameof(leaseContainer));
             this.leaseContainer = leaseContainer;
@@ -189,8 +189,8 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
         /// Sets the <see cref="PartitionLoadBalancingStrategy"/> to be used for partition load balancing
         /// </summary>
         /// <param name="strategy">The instance of <see cref="PartitionLoadBalancingStrategy"/> to use.</param>
-        /// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
-        public ChangeFeedProcessorBuilder WithPartitionLoadBalancingStrategy(PartitionLoadBalancingStrategy strategy)
+        /// <returns>The instance of <see cref="ChangeFeedProcessorBuilder{T}"/> to use.</returns>
+        public ChangeFeedProcessorBuilder<T> WithPartitionLoadBalancingStrategy(PartitionLoadBalancingStrategy strategy)
         {
             if (strategy == null) throw new ArgumentNullException(nameof(strategy));
             this.loadBalancingStrategy = strategy;
@@ -198,11 +198,11 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
         }
 
         /// <summary>
-        /// Sets the <see cref="PartitionProcessorFactory"/> to be used to create <see cref="PartitionProcessor"/> for partition processing.
+        /// Sets the <see cref="PartitionProcessorFactory{T}"/> to be used to create <see cref="PartitionProcessor"/> for partition processing.
         /// </summary>
-        /// <param name="partitionProcessorFactory">The instance of <see cref="PartitionProcessorFactory"/> to use.</param>
-        /// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
-        public ChangeFeedProcessorBuilder WithPartitionProcessorFactory(PartitionProcessorFactory partitionProcessorFactory)
+        /// <param name="partitionProcessorFactory">The instance of <see cref="PartitionProcessorFactory{T}"/> to use.</param>
+        /// <returns>The instance of <see cref="ChangeFeedProcessorBuilder{T}"/> to use.</returns>
+        public ChangeFeedProcessorBuilder<T> WithPartitionProcessorFactory(PartitionProcessorFactory<T> partitionProcessorFactory)
         {
             if (partitionProcessorFactory == null) throw new ArgumentNullException(nameof(partitionProcessorFactory));
             this.partitionProcessorFactory = partitionProcessorFactory;
@@ -213,8 +213,8 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
         /// Sets the <see cref="DocumentServiceLeaseStoreManager"/> to be used to manage leases.
         /// </summary>
         /// <param name="leaseStoreManager">The instance of <see cref="DocumentServiceLeaseStoreManager"/> to use.</param>
-        /// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
-        public ChangeFeedProcessorBuilder WithLeaseStoreManager(DocumentServiceLeaseStoreManager leaseStoreManager)
+        /// <returns>The instance of <see cref="ChangeFeedProcessorBuilder{T}"/> to use.</returns>
+        public ChangeFeedProcessorBuilder<T> WithLeaseStoreManager(DocumentServiceLeaseStoreManager leaseStoreManager)
         {
             if (leaseStoreManager == null) throw new ArgumentNullException(nameof(leaseStoreManager));
             this.LeaseStoreManager = leaseStoreManager;
@@ -225,8 +225,8 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
         /// Sets the <see cref="HealthMonitor"/> to be used to monitor unhealthiness situation.
         /// </summary>
         /// <param name="healthMonitor">The instance of <see cref="HealthMonitor"/> to use.</param>
-        /// <returns>The instance of <see cref="ChangeFeedProcessorBuilder"/> to use.</returns>
-        public ChangeFeedProcessorBuilder WithHealthMonitor(HealthMonitor healthMonitor)
+        /// <returns>The instance of <see cref="ChangeFeedProcessorBuilder{T}"/> to use.</returns>
+        public ChangeFeedProcessorBuilder<T> WithHealthMonitor(HealthMonitor healthMonitor)
         {
             if (healthMonitor == null) throw new ArgumentNullException(nameof(healthMonitor));
             this.healthMonitor = healthMonitor;
@@ -295,7 +295,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
 
         private PartitionManager BuildPartitionManager(DocumentServiceLeaseStoreManager leaseStoreManager)
         {
-            var factory = new CheckpointerObserverFactory(this.observerFactory, this.changeFeedProcessorOptions.CheckpointFrequency);
+            var factory = new CheckpointerObserverFactory<T>(this.observerFactory, this.changeFeedProcessorOptions.CheckpointFrequency);
             var synchronizer = new PartitionSynchronizerCore(
                 this.monitoredContainer,
                 leaseStoreManager.LeaseContainer,
@@ -303,10 +303,10 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
                 this.changeFeedProcessorOptions.DegreeOfParallelism,
                 this.changeFeedProcessorOptions.QueryPartitionsMaxBatchSize);
             var bootstrapper = new BootstrapperCore(synchronizer, leaseStoreManager.LeaseStore, this.lockTime, this.sleepTime);
-            var partitionSuperviserFactory = new PartitionSupervisorFactoryCore(
+            var partitionSuperviserFactory = new PartitionSupervisorFactoryCore<T>(
                 factory,
                 leaseStoreManager.LeaseManager,
-                this.partitionProcessorFactory ?? new PartitionProcessorFactoryCore(this.monitoredContainer, this.changeFeedProcessorOptions, leaseStoreManager.LeaseCheckpointer),
+                this.partitionProcessorFactory ?? new PartitionProcessorFactoryCore<T>(this.monitoredContainer, this.changeFeedProcessorOptions, leaseStoreManager.LeaseCheckpointer),
                 this.changeFeedProcessorOptions);
 
             if (this.loadBalancingStrategy == null)

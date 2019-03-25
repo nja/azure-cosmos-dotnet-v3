@@ -15,24 +15,24 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor
     public static class CosmosContainerChangeFeedExtensions
     {
         /// <summary>
-        /// Initializes a <see cref="ChangeFeedProcessorBuilder"/> for change feed processing.
+        /// Initializes a <see cref="ChangeFeedProcessorBuilder{T}"/> for change feed processing.
         /// </summary>
         /// <param name="cosmosContainer">Cosmos Container that is being monitored for changes.</param>
         /// <param name="onChanges">Delegate to receive changes.</param>
         /// <returns></returns>
-        public static ChangeFeedProcessorBuilder CreateChangeFeedProcessorBuilder (this CosmosContainer cosmosContainer, Func<IReadOnlyList<dynamic>, CancellationToken, Task> onChanges)
+        public static ChangeFeedProcessorBuilder<T> CreateChangeFeedProcessorBuilder<T>(this CosmosContainer cosmosContainer, Func<IReadOnlyList<T>, CancellationToken, Task> onChanges)
         {
-            return new ChangeFeedProcessorBuilder(cosmosContainer, onChanges);
+            return new ChangeFeedProcessorBuilder<T>(cosmosContainer, onChanges);
         }
 
         /// <summary>
-        /// Initializes a <see cref="ChangeFeedProcessorBuilder"/> for change feed estimating.
+        /// Initializes a <see cref="ChangeFeedProcessorBuilder{T}"/> for change feed estimating.
         /// </summary>
         /// <param name="cosmosContainer">Cosmos Container that is being monitored for changes.</param>
         /// <returns></returns>
-        public static ChangeFeedProcessorBuilder CreateChangeFeedEstimatorBuilder(this CosmosContainer cosmosContainer)
+        public static ChangeFeedProcessorBuilder<dynamic> CreateChangeFeedEstimatorBuilder(this CosmosContainer cosmosContainer)
         {
-            return new ChangeFeedProcessorBuilder(cosmosContainer);
+            return new ChangeFeedProcessorBuilder<dynamic>(cosmosContainer);
         }
     }
 }

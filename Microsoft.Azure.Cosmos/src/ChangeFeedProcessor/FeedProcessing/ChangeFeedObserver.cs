@@ -11,7 +11,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
     /// <summary>
     /// This interface is used to deliver change events to document feed observers.
     /// </summary>
-    public abstract class ChangeFeedObserver
+    public abstract class ChangeFeedObserver<T>
     {
         /// <summary>
         /// This is called when change feed observer is opened.
@@ -35,6 +35,6 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
         /// <param name="docs">The documents changed.</param>
         /// <param name="cancellationToken">Token to signal that the parition processing is going to finish.</param>
         /// <returns>A Task to allow asynchronous execution.</returns>
-        public abstract Task ProcessChangesAsync(ChangeFeedObserverContext context, IReadOnlyList<dynamic> docs, CancellationToken cancellationToken);
+        public abstract Task ProcessChangesAsync(ChangeFeedObserverContext context, IReadOnlyList<T> docs, CancellationToken cancellationToken);
     }
 }

@@ -9,14 +9,14 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
     using System.Threading;
     using System.Threading.Tasks;
 
-    internal sealed class AutoCheckpointer : ChangeFeedObserver
+    internal sealed class AutoCheckpointer<T> : ChangeFeedObserver<T>
     {
         private readonly CheckpointFrequency checkpointFrequency;
-        private readonly ChangeFeedObserver observer;
+        private readonly ChangeFeedObserver<T> observer;
         private int processedDocCount;
         private DateTime lastCheckpointTime = DateTime.UtcNow;
 
-        public AutoCheckpointer(CheckpointFrequency checkpointFrequency, ChangeFeedObserver observer)
+        public AutoCheckpointer(CheckpointFrequency checkpointFrequency, ChangeFeedObserver<T> observer)
         {
             if (checkpointFrequency == null)
                 throw new ArgumentNullException(nameof(checkpointFrequency));
@@ -37,7 +37,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
             return this.observer.CloseAsync(context, reason);
         }
 
-        public override async Task ProcessChangesAsync(ChangeFeedObserverContext context, IReadOnlyList<dynamic> docs, CancellationToken cancellationToken)
+        public override async Task ProcessChangesAsync(ChangeFeedObserverContext context, IReadOnlyList<T> docs, CancellationToken cancellationToken)
         {
             await this.observer.ProcessChangesAsync(context, docs, cancellationToken).ConfigureAwait(false);
             this.processedDocCount += docs.Count;

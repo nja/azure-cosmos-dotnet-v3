@@ -8,17 +8,17 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing;
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement;
 
-    internal sealed class PartitionSupervisorFactoryCore : PartitionSupervisorFactory
+    internal sealed class PartitionSupervisorFactoryCore<T> : PartitionSupervisorFactory
     {
-        private readonly ChangeFeedObserverFactory observerFactory;
+        private readonly ChangeFeedObserverFactory<T> observerFactory;
         private readonly DocumentServiceLeaseManager leaseManager;
         private readonly ChangeFeedProcessorOptions changeFeedProcessorOptions;
-        private readonly PartitionProcessorFactory partitionProcessorFactory;
+        private readonly PartitionProcessorFactory<T> partitionProcessorFactory;
 
         public PartitionSupervisorFactoryCore(
-            ChangeFeedObserverFactory observerFactory,
+            ChangeFeedObserverFactory<T> observerFactory,
             DocumentServiceLeaseManager leaseManager,
-            PartitionProcessorFactory partitionProcessorFactory,
+            PartitionProcessorFactory<T> partitionProcessorFactory,
             ChangeFeedProcessorOptions options)
         {
             if (observerFactory == null) throw new ArgumentNullException(nameof(observerFactory));
@@ -37,11 +37,11 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
             if (lease == null)
                 throw new ArgumentNullException(nameof(lease));
 
-            ChangeFeedObserver changeFeedObserver = this.observerFactory.CreateObserver();
+            ChangeFeedObserver<T> changeFeedObserver = this.observerFactory.CreateObserver();
             var processor = this.partitionProcessorFactory.Create(lease, changeFeedObserver);
             var renewer = new LeaseRenewerCore(lease, this.leaseManager, this.changeFeedProcessorOptions.LeaseRenewInterval);
 
-            return new PartitionSupervisorCore(lease, changeFeedObserver, processor, renewer);
+            return new PartitionSupervisorCore<T>(lease, changeFeedObserver, processor, renewer);
         }
     }
 }

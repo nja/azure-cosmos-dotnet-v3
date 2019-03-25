@@ -5,7 +5,7 @@
 namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
 {
     /// <summary>
-    /// The reason for the <see cref="ChangeFeedObserver"/> to close.
+    /// The reason for the <see cref="ChangeFeedObserver{T}"/> to close.
     /// </summary>
     public enum ChangeFeedObserverCloseReason
     {

@@ -9,7 +9,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
     /// <summary>
     /// Factory class used to create instance(s) of <see cref="PartitionProcessor"/>.
     /// </summary>
-    public abstract class PartitionProcessorFactory
+    public abstract class PartitionProcessorFactory<T>
     {
         /// <summary>
         /// Creates an instance of a <see cref="PartitionProcessor"/>.
@@ -17,6 +17,6 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
         /// <param name="lease">Lease to be used for partition processing</param>
         /// <param name="observer">Observer to be used</param>
         /// <returns>An instance of a <see cref="PartitionProcessor"/>.</returns>
-        public abstract PartitionProcessor Create(DocumentServiceLease lease, ChangeFeedObserver observer);
+        public abstract PartitionProcessor Create(DocumentServiceLease lease, ChangeFeedObserver<T> observer);
     }
 }

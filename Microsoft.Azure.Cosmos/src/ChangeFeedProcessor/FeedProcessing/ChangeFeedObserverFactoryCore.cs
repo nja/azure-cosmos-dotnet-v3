@@ -9,18 +9,18 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
 {
-    internal sealed class ChangeFeedObserverFactoryCore: ChangeFeedObserverFactory
+    internal sealed class ChangeFeedObserverFactoryCore<T>: ChangeFeedObserverFactory<T>
     {
-        private readonly Func<IReadOnlyList<dynamic>, CancellationToken, Task> onChanges;
+        private readonly Func<IReadOnlyList<T>, CancellationToken, Task> onChanges;
 
-        public ChangeFeedObserverFactoryCore(Func<IReadOnlyList<dynamic>, CancellationToken, Task> onChanges)
+        public ChangeFeedObserverFactoryCore(Func<IReadOnlyList<T>, CancellationToken, Task> onChanges)
         {
             this.onChanges = onChanges;
         }
 
-        public override ChangeFeedObserver CreateObserver()
+        public override ChangeFeedObserver<T> CreateObserver()
         {
-            return new ChangeFeedObserverBase(this.onChanges);
+            return new ChangeFeedObserverBase<T>(this.onChanges);
         }
     }
 }

@@ -17,17 +17,17 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.Logging;
     using Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement;
 
-    internal sealed class PartitionProcessorCore : PartitionProcessor
+    internal sealed class PartitionProcessorCore<T> : PartitionProcessor
     {
         private static readonly int DefaultMaxItemCount = 100;
         private readonly ILog logger = LogProvider.GetCurrentClassLogger();
         private readonly IDocumentQuery<Document> query;
         private readonly ProcessorSettings settings;
         private readonly PartitionCheckpointer checkpointer;
-        private readonly ChangeFeedObserver observer;
+        private readonly ChangeFeedObserver<T> observer;
         private readonly ChangeFeedOptions options;
 
-        public PartitionProcessorCore(ChangeFeedObserver observer, CosmosContainer container, ProcessorSettings settings, PartitionCheckpointer checkpointer)
+        public PartitionProcessorCore(ChangeFeedObserver<T> observer, CosmosContainer container, ProcessorSettings settings, PartitionCheckpointer checkpointer)
         {
             this.observer = observer;
             this.settings = settings;
@@ -57,7 +57,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
                 {
                     do
                     {
-                        IFeedResponse<Document> response = await this.query.ExecuteNextAsync<Document>(cancellationToken).ConfigureAwait(false);
+                        IFeedResponse<T> response = await this.query.ExecuteNextAsync<T>(cancellationToken).ConfigureAwait(false);
                         lastContinuation = response.ResponseContinuation;
                         if (response.Count > 0)
                         {
@@ -123,11 +123,11 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
             }
         }
 
-        private Task DispatchChanges(IFeedResponse<Document> response, CancellationToken cancellationToken)
+        private Task DispatchChanges(IFeedResponse<T> response, CancellationToken cancellationToken)
         {
-            ChangeFeedObserverContext context = new ChangeFeedObserverContextCore(this.settings.PartitionKeyRangeId, response, this.checkpointer);
-            var docs = new List<Document>(response.Count);
-            using (IEnumerator<Document> e = response.GetEnumerator())
+            ChangeFeedObserverContext context = new ChangeFeedObserverContextCore<T>(this.settings.PartitionKeyRangeId, response, this.checkpointer);
+            var docs = new List<T>(response.Count);
+            using (IEnumerator<T> e = response.GetEnumerator())
             {
                 while (e.MoveNext())
                 {
