@@ -5,7 +5,6 @@
 namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
 {
     using System.Threading.Tasks;
-    using Microsoft.Azure.Cosmos;
 
     /// <summary>
     /// Represents the context passed to <see cref="ChangeFeedObserver{T}"/> events.
@@ -13,9 +12,9 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
     public abstract class ChangeFeedObserverContext
     {
         /// <summary>
-        /// Gets the id of the partition for the current event.
+        /// Gets the Lease Token associated with the current Observer
         /// </summary>
-        public abstract string PartitionKeyRangeId { get; }
+        public abstract string LeaseToken { get; }
 
         //public abstract IFeedResponse<Document> FeedResponse { get; }
 

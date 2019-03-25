@@ -35,7 +35,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
             this.options = new ChangeFeedOptions
             {
                 MaxItemCount = settings.MaxItemCount,
-                PartitionKeyRangeId = settings.PartitionKeyRangeId,
+                PartitionKeyRangeId = settings.LeaseToken,
                 SessionToken = settings.SessionToken,
                 StartFromBeginning = settings.StartFromBeginning,
                 RequestContinuation = settings.StartContinuation,
@@ -73,7 +73,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
                 }
                 catch (DocumentClientException clientException)
                 {
-                    this.logger.WarnException("exception: partition '{0}'", clientException, this.settings.PartitionKeyRangeId);
+                    this.logger.WarnException("exception: partition '{0}'", clientException, this.settings.LeaseToken);
                     DocDbError docDbError = ExceptionClassifier.ClassifyClientException(clientException);
                     switch (docDbError)
                     {
@@ -114,7 +114,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
                     if (cancellationToken.IsCancellationRequested)
                         throw;
 
-                    this.logger.WarnException("exception: partition '{0}'", canceledException, this.settings.PartitionKeyRangeId);
+                    this.logger.WarnException("exception: partition '{0}'", canceledException, this.settings.LeaseToken);
 
                     // ignore as it is caused by DocumentDB client
                 }
@@ -125,7 +125,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
 
         private Task DispatchChanges(IFeedResponse<T> response, CancellationToken cancellationToken)
         {
-            ChangeFeedObserverContext context = new ChangeFeedObserverContextCore<T>(this.settings.PartitionKeyRangeId, response, this.checkpointer);
+            ChangeFeedObserverContext context = new ChangeFeedObserverContextCore<T>(this.settings.LeaseToken, response, this.checkpointer);
             var docs = new List<T>(response.Count);
             using (IEnumerator<T> e = response.GetEnumerator())
             {

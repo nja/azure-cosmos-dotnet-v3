@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.FeedProcessing
 
     internal class ProcessorSettings
     {
-        public string PartitionKeyRangeId { get; set; }
+        public string LeaseToken { get; set; }
 
         public int? MaxItemCount { get; set; }
 
