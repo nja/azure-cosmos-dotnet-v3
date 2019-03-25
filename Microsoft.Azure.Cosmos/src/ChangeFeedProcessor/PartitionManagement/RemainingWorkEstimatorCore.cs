@@ -42,25 +42,25 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
 
         public override async Task<long> GetEstimatedRemainingWorkAsync()
         {
-            var partitions = await this.GetEstimatedRemainingWorkPerPartitionAsync();
-            if (partitions.Count == 0) return 1;
+            var leaseTokens = await this.GetEstimatedRemainingWorkPerLeaseTokenAsync();
+            if (leaseTokens.Count == 0) return 1;
 
-            return partitions.Sum(partition => partition.RemainingWork);
+            return leaseTokens.Sum(leaseToken => leaseToken.RemainingWork);
         }
 
-        public override async Task<IReadOnlyList<RemainingPartitionWork>> GetEstimatedRemainingWorkPerPartitionAsync()
+        public override async Task<IReadOnlyList<RemainingLeaseTokenWork>> GetEstimatedRemainingWorkPerLeaseTokenAsync()
         {
             IReadOnlyList<DocumentServiceLease> leases = await this.leaseContainer.GetAllLeasesAsync().ConfigureAwait(false);
             if (leases == null || leases.Count == 0)
             {
-                return new List<RemainingPartitionWork>().AsReadOnly();
+                return new List<RemainingLeaseTokenWork>().AsReadOnly();
             }
 
             var tasks = Partitioner.Create(leases)
                 .GetPartitions(this.degreeOfParallelism)
                 .Select(partition => Task.Run(async () =>
                 {
-                    var partialResults = new List<RemainingPartitionWork>();
+                    var partialResults = new List<RemainingLeaseTokenWork>();
                     using (partition)
                     {
                         while (partition.MoveNext())
@@ -68,13 +68,13 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
                             DocumentServiceLease item = partition.Current;
                             try
                             {
-                                if (string.IsNullOrEmpty(item?.ProcessingDistributionUnit)) continue;
+                                if (string.IsNullOrEmpty(item?.CurrentLeaseToken)) continue;
                                 var result = await this.GetRemainingWorkAsync(item);
-                                partialResults.Add(new RemainingPartitionWork(item.ProcessingDistributionUnit, result));
+                                partialResults.Add(new RemainingLeaseTokenWork(item.CurrentLeaseToken, result));
                             }
                             catch (DocumentClientException ex)
                             {
-                                Logger.WarnException($"Getting estimated work for {item.ProcessingDistributionUnit} failed!", ex);
+                                Logger.WarnException($"Getting estimated work for lease token {item.CurrentLeaseToken} failed!", ex);
                             }
                         }
                     }
@@ -89,9 +89,6 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
         /// <summary>
         /// Parses a Session Token and extracts the LSN.
         /// </summary>
-        /// <remarks>
-        /// Session Token can be in two formats. Either {PartitionKeyRangeId}:{LSN} or {PartitionKeyRangeId}:{Version}#{GlobalLSN}.
-        /// </remarks>
         /// <param name="sessionToken">A Session Token</param>
         /// <returns>Lsn value</returns>
         internal static string ExtractLsnFromSessionToken(string sessionToken)
@@ -143,7 +140,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
             ChangeFeedOptions options = new ChangeFeedOptions
             {
                 MaxItemCount = 1,
-                PartitionKeyRangeId = existingLease.ProcessingDistributionUnit,
+                PartitionKeyRangeId = existingLease.CurrentLeaseToken,
                 RequestContinuation = existingLease.ContinuationToken,
                 StartFromBeginning = string.IsNullOrEmpty(existingLease.ContinuationToken),
             };
@@ -162,12 +159,12 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
                     return 1;
                 }
 
-                long partitionRemainingWork = parsedLSNFromSessionToken - lastQueryLSN;
-                return partitionRemainingWork < 0 ? 0 : partitionRemainingWork;
+                long leaseTokenRemainingWork = parsedLSNFromSessionToken - lastQueryLSN;
+                return leaseTokenRemainingWork < 0 ? 0 : leaseTokenRemainingWork;
             }
             catch (Exception clientException)
             {
-                Logger.WarnException($"GetEstimateWork > exception: partition '{existingLease.ProcessingDistributionUnit}'", clientException);
+                Logger.WarnException($"GetEstimateWork > exception: lease token '{existingLease.CurrentLeaseToken}'", clientException);
                 throw;
             }
         }

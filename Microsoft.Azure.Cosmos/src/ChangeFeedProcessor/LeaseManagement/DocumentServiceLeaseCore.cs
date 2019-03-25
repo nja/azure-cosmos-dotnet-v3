@@ -22,7 +22,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
         public DocumentServiceLeaseCore(DocumentServiceLeaseCore other)
         {
             this.LeaseId = other.LeaseId;
-            this.DistributionUnit = other.DistributionUnit;
+            this.LeaseToken = other.LeaseToken;
             this.Owner = other.Owner;
             this.ContinuationToken = other.ContinuationToken;
             this.ETag = other.ETag;
@@ -39,10 +39,14 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
         [JsonProperty("_etag")]
         public string ETag { get; set; }
 
-        [JsonProperty("PartitionId")]
-        public string DistributionUnit { get; set; }
+        [JsonProperty("LeaseToken")]
+        public string LeaseToken { get; set; }
 
-        public override string ProcessingDistributionUnit => this.DistributionUnit;
+        [JsonProperty("PartitionId")]
+        private string PartitionId { set { LeaseToken = value; } }
+
+        [JsonIgnore]
+        public override string CurrentLeaseToken => this.LeaseToken;
 
         [JsonProperty("Owner")]
         public override string Owner { get; set; }

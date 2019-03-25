@@ -43,7 +43,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
                     return leaseDocument;
                 }
 
-                Logger.InfoFormat("Partition {0} lease update conflict. Reading the current version of lease.", lease.ProcessingDistributionUnit);
+                Logger.InfoFormat("Lease with token {0} update conflict. Reading the current version of lease.", lease.CurrentLeaseToken);
                 DocumentServiceLeaseCore serverLease;
                 try
                 {
@@ -53,13 +53,13 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.LeaseManagement
                 }
                 catch (DocumentClientException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
                 {
-                    Logger.InfoFormat("Partition {0} lease no longer exists", lease.ProcessingDistributionUnit);
+                    Logger.InfoFormat("Lease with token {0} no longer exists", lease.CurrentLeaseToken);
                     throw new LeaseLostException(lease);
                 }
 
                 Logger.InfoFormat(
-                    "Partition {0} update failed because the lease with token '{1}' was updated by host '{2}' with token '{3}'. Will retry, {4} retry(s) left.",
-                    lease.ProcessingDistributionUnit,
+                    "Lease with token {0} update failed because the lease with concurrency token '{1}' was updated by host '{2}' with concurrency token '{3}'. Will retry, {4} retry(s) left.",
+                    lease.CurrentLeaseToken,
                     lease.ConcurrencyToken,
                     serverLease.Owner,
                     serverLease.ConcurrencyToken,

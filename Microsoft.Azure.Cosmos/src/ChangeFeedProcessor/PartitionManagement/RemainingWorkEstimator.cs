@@ -19,9 +19,9 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
         public abstract Task<long> GetEstimatedRemainingWorkAsync();
 
         /// <summary>
-        /// Calculates an estimate of the pending work remaining to be read in the Change Feed in amount of documents per partition.
+        /// Calculates an estimate of the pending work remaining to be read in the Change Feed in amount of documents per distributed lease token.
         /// </summary>
-        /// <returns>An array of an estimation of pending work in amount of documents per partitions.</returns>
-        public abstract Task<IReadOnlyList<RemainingPartitionWork>> GetEstimatedRemainingWorkPerPartitionAsync();
+        /// <returns>An array of an estimation of pending work in amount of documents per distributed lease token.</returns>
+        public abstract Task<IReadOnlyList<RemainingLeaseTokenWork>> GetEstimatedRemainingWorkPerLeaseTokenAsync();
     }
 }

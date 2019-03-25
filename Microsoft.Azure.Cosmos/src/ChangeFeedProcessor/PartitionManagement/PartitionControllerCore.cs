@@ -48,10 +48,10 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
         {
             var tcs = new TaskCompletionSource<bool>();
 
-            if (!this.currentlyOwnedPartitions.TryAdd(lease.ProcessingDistributionUnit, tcs))
+            if (!this.currentlyOwnedPartitions.TryAdd(lease.CurrentLeaseToken, tcs))
             {
                 await this.leaseManager.UpdatePropertiesAsync(lease).ConfigureAwait(false);
-                Logger.DebugFormat("partition {0}: updated", lease.ProcessingDistributionUnit);
+                Logger.DebugFormat("Lease with token {0}: updated", lease.CurrentLeaseToken);
                 return;
             }
 
@@ -59,7 +59,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
             {
                 var updatedLease = await this.leaseManager.AcquireAsync(lease).ConfigureAwait(false);
                 if (updatedLease != null) lease = updatedLease;
-                Logger.InfoFormat("partition {0}: acquired", lease.ProcessingDistributionUnit);
+                Logger.InfoFormat("Lease with token {0}: acquired", lease.CurrentLeaseToken);
             }
             catch (Exception)
             {
@@ -84,7 +84,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
             var addLeaseTasks = new List<Task>();
             foreach (DocumentServiceLease lease in await this.leaseContainer.GetOwnedLeasesAsync().ConfigureAwait(false))
             {
-                Logger.InfoFormat("Acquired lease for PartitionId '{0}' on startup.", lease.ProcessingDistributionUnit);
+                Logger.InfoFormat("Acquired lease with token '{0}' on startup.", lease.CurrentLeaseToken);
                 addLeaseTasks.Add(this.AddOrUpdateLeaseAsync(lease));
             }
 
@@ -94,12 +94,12 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
         private async Task RemoveLeaseAsync(DocumentServiceLease lease)
         {
             TaskCompletionSource<bool> worker;
-            if (!this.currentlyOwnedPartitions.TryRemove(lease.ProcessingDistributionUnit, out worker))
+            if (!this.currentlyOwnedPartitions.TryRemove(lease.CurrentLeaseToken, out worker))
             {
                 return;
             }
 
-            Logger.InfoFormat("partition {0}: released", lease.ProcessingDistributionUnit);
+            Logger.InfoFormat("Lease with token {0}: released", lease.CurrentLeaseToken);
 
             try
             {
@@ -107,7 +107,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
             }
             catch (Exception e)
             {
-                Logger.WarnException("partition {0}: failed to remove lease", e, lease.ProcessingDistributionUnit);
+                Logger.WarnException("Lease with token {0}: failed to remove lease", e, lease.CurrentLeaseToken);
             }
             finally
             {
@@ -127,11 +127,11 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
             }
             catch (TaskCanceledException)
             {
-                Logger.DebugFormat("partition {0}: processing canceled", lease.ProcessingDistributionUnit);
+                Logger.DebugFormat("Lease with token {0}: processing canceled", lease.CurrentLeaseToken);
             }
             catch (Exception e)
             {
-                Logger.WarnException("partition {0}: processing failed", e, lease.ProcessingDistributionUnit);
+                Logger.WarnException("Lease with token {0}: processing failed", e, lease.CurrentLeaseToken);
             }
 
             await this.RemoveLeaseAsync(lease).ConfigureAwait(false);
@@ -154,7 +154,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
             }
             catch (Exception e)
             {
-                Logger.WarnException("partition {0}: failed to split", e, lease.ProcessingDistributionUnit);
+                Logger.WarnException("Lease with token {0}: failed to split", e, lease.CurrentLeaseToken);
             }
         }
     }

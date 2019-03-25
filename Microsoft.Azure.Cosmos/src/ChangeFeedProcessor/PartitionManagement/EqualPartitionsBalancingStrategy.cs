@@ -126,9 +126,9 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
         {
             foreach (DocumentServiceLease lease in allLeases)
             {
-                Debug.Assert(lease.ProcessingDistributionUnit != null, "TakeLeasesAsync: lease.PartitionId cannot be null.");
+                Debug.Assert(lease.CurrentLeaseToken != null, "TakeLeasesAsync: lease.PartitionId cannot be null.");
 
-                allPartitions.Add(lease.ProcessingDistributionUnit, lease);
+                allPartitions.Add(lease.CurrentLeaseToken, lease);
                 if (string.IsNullOrWhiteSpace(lease.Owner) || this.IsExpired(lease))
                 {
                     Logger.DebugFormat("Found unused or expired lease: {0}", lease);

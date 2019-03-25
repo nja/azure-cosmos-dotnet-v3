@@ -29,7 +29,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
         {
             try
             {
-                Logger.InfoFormat("Partition {0}: renewer task started.", this.lease.ProcessingDistributionUnit);
+                Logger.InfoFormat("Lease with token {0}: renewer task started.", this.lease.CurrentLeaseToken);
                 await Task.Delay(TimeSpan.FromTicks(this.leaseRenewInterval.Ticks / 2), cancellationToken).ConfigureAwait(false);
 
                 while (true)
@@ -40,11 +40,11 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                Logger.InfoFormat("Partition {0}: renewer task stopped.", this.lease.ProcessingDistributionUnit);
+                Logger.InfoFormat("Lease with token {0}: renewer task stopped.", this.lease.CurrentLeaseToken);
             }
             catch (Exception ex)
             {
-                Logger.FatalException("Partition {0}: renew lease loop failed", ex, this.lease.ProcessingDistributionUnit);
+                Logger.FatalException("Lease with token {0}: renew lease loop failed", ex, this.lease.CurrentLeaseToken);
                 throw;
             }
         }
@@ -56,16 +56,16 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
                 var renewedLease = await this.leaseManager.RenewAsync(this.lease).ConfigureAwait(false);
                 if (renewedLease != null) this.lease = renewedLease;
 
-                Logger.InfoFormat("Partition {0}: renewed lease with result {1}", this.lease.ProcessingDistributionUnit, renewedLease != null);
+                Logger.InfoFormat("Lease with token {0}: renewed lease with result {1}", this.lease.CurrentLeaseToken, renewedLease != null);
             }
             catch (LeaseLostException leaseLostException)
             {
-                Logger.ErrorException("Partition {0}: lost lease on renew.", leaseLostException, this.lease.ProcessingDistributionUnit);
+                Logger.ErrorException("Lease with token {0}: lost lease on renew.", leaseLostException, this.lease.CurrentLeaseToken);
                 throw;
             }
             catch (Exception ex)
             {
-                Logger.ErrorException("Partition {0}: failed to renew lease.", ex, this.lease.ProcessingDistributionUnit);
+                Logger.ErrorException("Lease with token {0}: failed to renew lease.", ex, this.lease.CurrentLeaseToken);
             }
         }
     }

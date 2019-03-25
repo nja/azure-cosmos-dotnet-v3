@@ -31,7 +31,7 @@ namespace Microsoft.Azure.Cosmos.ChangeFeedProcessor.PartitionManagement
 
         public override async Task RunAsync(CancellationToken shutdownToken)
         {
-            var context = new ChangeFeedObserverContextCore(this.lease.ProcessingDistributionUnit);
+            var context = new ChangeFeedObserverContextCore(this.lease.CurrentLeaseToken);
             await this.observer.OpenAsync(context).ConfigureAwait(false);
 
             this.processorCancellation = CancellationTokenSource.CreateLinkedTokenSource(shutdownToken);
